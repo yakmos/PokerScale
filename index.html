@@ -122,6 +122,16 @@ html,body{min-height:100vh;min-height:100dvh;background:var(--bg);color:#e8eaf0;
 #loadOv{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:999;}
 .spin{width:32px;height:32px;border:3px solid rgba(255,214,0,.2);border-top-color:var(--gold);border-radius:50%;animation:sp .7s linear infinite;}
 @keyframes sp{to{transform:rotate(360deg)}}
+
+/* countdown */
+.countdown-overlay{position:fixed;inset:0;background:rgba(10,14,26,0.92);display:flex;align-items:center;justify-content:center;z-index:200;}
+.countdown-num{font-family:var(--mono);font-size:120px;font-weight:900;animation:cdPop .85s ease forwards;}
+.countdown-go{font-family:'Heebo',sans-serif;font-size:64px;font-weight:900;color:var(--green);animation:cdPop .6s ease forwards;}
+@keyframes cdPop{0%{transform:scale(1.6);opacity:0}40%{opacity:1}80%{transform:scale(1)}100%{transform:scale(0.85);opacity:0}}
+
+.diff-btn,.time-btn{padding:10px 6px;border-radius:10px;border:2px solid var(--bdr);background:var(--surf2);color:rgba(255,255,255,.6);font-family:'Heebo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;-webkit-appearance:none;width:100%;}
+.diff-btn.sel,.time-btn.sel{background:var(--surf);border-color:var(--gold);color:var(--gold);}
+.diff-btn:active,.time-btn:active{transform:scale(.96);}
 </style>
 </head>
 <body>
@@ -251,6 +261,7 @@ const rPlayer  = n=>ref(db,`${ROOM}/players/${n}`);
 const rScore   = ()=>ref(db,`${ROOM}/score`);
 
 let myName='', myTeam='', isAdmin=false;
+let difficulty='medium', gameTime=120;
 let mC=0, mW=0;
 let timerInt=null, pollInt=null, scorePollInt=null;
 let curQ=null, answerLocked=false;
@@ -261,27 +272,48 @@ let gameEnded=false;
 function genQ(){
   const r=Math.random();
   let a,b,ans,txt;
-  if(r<0.45){
-    a=Math.floor(Math.random()*9)+2;
-    b=Math.floor(Math.random()*9)+2;
-    ans=a*b; txt=`${a} × ${b}`;
-  } else if(r<0.72){
-    a=Math.floor(Math.random()*50)+15;
-    b=Math.floor(Math.random()*50)+15;
-    ans=a+b; txt=`${a} + ${b}`;
+  if(difficulty==='easy'){
+    /* easy: small multiplication 2-5, simple addition under 20 */
+    if(r<0.5){
+      a=Math.floor(Math.random()*4)+2; b=Math.floor(Math.random()*4)+2;
+      ans=a*b; txt=`${a} × ${b}`;
+    } else {
+      a=Math.floor(Math.random()*15)+5; b=Math.floor(Math.random()*10)+1;
+      ans=a+b; txt=`${a} + ${b}`;
+    }
+  } else if(difficulty==='hard'){
+    /* hard: big multiplication, 3-digit addition/subtraction */
+    if(r<0.4){
+      a=Math.floor(Math.random()*9)+4; b=Math.floor(Math.random()*9)+4;
+      ans=a*b; txt=`${a} × ${b}`;
+    } else if(r<0.7){
+      a=Math.floor(Math.random()*200)+100; b=Math.floor(Math.random()*200)+100;
+      ans=a+b; txt=`${a} + ${b}`;
+    } else {
+      a=Math.floor(Math.random()*200)+100; b=Math.floor(Math.random()*Math.min(a-1,150))+1;
+      ans=a-b; txt=`${a} - ${b}`;
+    }
   } else {
-    a=Math.floor(Math.random()*60)+20;
-    b=Math.floor(Math.random()*Math.min(a-1,40))+1;
-    ans=a-b; txt=`${a} - ${b}`;
+    /* medium: original logic */
+    if(r<0.45){
+      a=Math.floor(Math.random()*9)+2; b=Math.floor(Math.random()*9)+2;
+      ans=a*b; txt=`${a} × ${b}`;
+    } else if(r<0.72){
+      a=Math.floor(Math.random()*50)+15; b=Math.floor(Math.random()*50)+15;
+      ans=a+b; txt=`${a} + ${b}`;
+    } else {
+      a=Math.floor(Math.random()*60)+20; b=Math.floor(Math.random()*Math.min(a-1,40))+1;
+      ans=a-b; txt=`${a} - ${b}`;
+    }
   }
-  /* generate 3 wrong answers — close but distinct */
+  /* wrong answers — spread depends on difficulty */
+  const spread=difficulty==='easy'?3:difficulty==='hard'?15:8;
   const wrongs=new Set();
   while(wrongs.size<3){
-    const delta=(Math.floor(Math.random()*8)+1)*(Math.random()<0.5?1:-1);
+    const delta=(Math.floor(Math.random()*spread)+1)*(Math.random()<0.5?1:-1);
     const w=ans+delta;
-    if(w!==ans && w>0) wrongs.add(w);
+    if(w!==ans&&w>0) wrongs.add(w);
   }
-  /* shuffle all 4 options */
   const opts=[ans,...wrongs].sort(()=>Math.random()-.5);
   return {txt:`${txt} = ?`, ans, opts};
 }
@@ -326,13 +358,38 @@ async function regPlayer(){
 }
 
 /* ── WAITING ── */
+window.setDiff=function(d){
+  difficulty=d;
+  ['easy','medium','hard'].forEach(x=>document.getElementById('d-'+x)?.classList.toggle('sel',x===d));
+};
+window.setTime=function(t){
+  gameTime=t;
+  [60,120,180].forEach(x=>document.getElementById('t-'+x)?.classList.toggle('sel',x===t));
+};
 function goWait(){
   show('sWait'); setPill('ממתין','pw');
   document.getElementById('shareUrl').textContent=location.href;
   if(isAdmin){
-    document.getElementById('adminArea').innerHTML=
-      `<button class="btn btn-green" id="stBtn" onclick="startGame()">🚀 התחל משחק</button>
-       <button class="btn btn-outline" onclick="resetGame()">🗑 אפס הכל</button>`;
+    document.getElementById('adminArea').innerHTML=`
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:8px;letter-spacing:.5px;">רמת קושי</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <button class="diff-btn" id="d-easy"   onclick="setDiff('easy')"  >😊 קל</button>
+          <button class="diff-btn sel" id="d-medium" onclick="setDiff('medium')">🧠 בינוני</button>
+          <button class="diff-btn" id="d-hard"   onclick="setDiff('hard')" >🔥 קשה</button>
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:8px;letter-spacing:.5px;">זמן משחק</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <button class="time-btn" id="t-60"  onclick="setTime(60)" >1 דק'</button>
+          <button class="time-btn sel" id="t-120" onclick="setTime(120)">2 דק'</button>
+          <button class="time-btn" id="t-180" onclick="setTime(180)">3 דק'</button>
+        </div>
+      </div>
+      <button class="btn btn-green" id="stBtn" onclick="startGame()">🚀 התחל משחק</button>
+      <button class="btn btn-outline" onclick="resetGame()">🗑 אפס הכל</button>
+    `; 
   } else {
     document.getElementById('waitMsg').textContent='ממתין למנהל שיתחיל...';
   }
@@ -340,7 +397,13 @@ function goWait(){
   let uiStarted=false;
   onValue(rGame(),snap=>{
     const g=snap.val()||{};
-    if(g.phase==='playing'&&!isAdmin&&!uiStarted){uiStarted=true;startUI();}
+    if(g.phase==='countdown'&&!isAdmin&&!uiStarted){
+      uiStarted=true;
+      difficulty=g.difficulty||'medium';
+      gameTime=g.secsLeft||120;
+      runCountdown(()=>startUI());
+    }
+    if(g.phase==='playing'&&!isAdmin&&!uiStarted){uiStarted=true;difficulty=g.difficulty||'medium';startUI();}
     if(g.phase==='ended'&&!uiStarted){goRes();}
   });
 }
@@ -369,11 +432,30 @@ function refreshTeams(p){
 /* ── START ── */
 window.startGame=async function(){
   await set(rScore(),{blue:0,red:0});
-  await set(rGame(),{phase:'playing',secsLeft:TOTAL,startedAt:Date.now()});
-  startUI();
+  await set(rGame(),{phase:'countdown',secsLeft:gameTime,difficulty,startedAt:Date.now()});
+  runCountdown(()=>{
+    set(rGame(),{phase:'playing',secsLeft:gameTime,difficulty,startedAt:Date.now()});
+    startUI();
+  });
 };
 
 /* ── GAME UI ── */
+function runCountdown(cb){
+  const nums=['3','2','1','GO!'];
+  const colors=['#e8eaf0','#e8eaf0','#e8eaf0','var(--green)'];
+  let i=0;
+  const overlay=document.createElement('div');
+  overlay.className='countdown-overlay';
+  document.body.appendChild(overlay);
+  function step(){
+    if(i>=nums.length){overlay.remove();cb();return;}
+    overlay.innerHTML=`<div class="${nums[i]==='GO!'?'countdown-go':'countdown-num'}" style="color:${colors[i]}">${nums[i]}</div>`;
+    i++;
+    setTimeout(step,900);
+  }
+  step();
+}
+
 let _uiRunning=false;
 function startUI(){
   if(_uiRunning)return;
@@ -386,7 +468,7 @@ function startUI(){
     timerInt=setInterval(async()=>{
       const s=await get(rGame()); const g=s.val()||{};
       if(g.phase!=='playing'){clearInterval(timerInt);return;}
-      const left=(g.secsLeft??TOTAL)-1;
+      const left=(g.secsLeft??gameTime)-1;
       if(left<=0){
         clearInterval(timerInt);
         await update(rGame(),{phase:'ended',secsLeft:0});
@@ -399,7 +481,7 @@ function startUI(){
   /* poll game state every 2s — completely separate from question logic */
   pollInt=setInterval(async()=>{
     const s=await get(rGame()); const g=s.val()||{};
-    gameSecsLeft=g.secsLeft??TOTAL;
+    gameSecsLeft=g.secsLeft??gameTime;
     updateTimerUI();
     if(g.phase==='ended'&&!gameEnded){
       gameEnded=true;
@@ -425,7 +507,7 @@ function updateTimerUI(){
   const disp=document.getElementById('tDisp');
   disp.textContent=`${m}:${String(s).padStart(2,'0')}`;
   disp.style.color=gameSecsLeft<=30?'var(--red)':gameSecsLeft<=60?'var(--gold)':'var(--green)';
-  const pct=(gameSecsLeft/TOTAL)*100;
+  const pct=(gameSecsLeft/gameTime)*100;
   const f=document.getElementById('pFill');
   f.style.width=pct+'%';
   f.style.background=pct>50?'var(--green)':pct>25?'var(--gold)':'var(--red)';
