@@ -458,10 +458,12 @@ function goTrading(){
     renderStocks();updateBalance();updateLB();
   });
 
-  /* listen news — show big popup */
+  /* listen news — show big popup only once per event */
+  let lastNewsTs = 0;
   onValue(rNews(), snap=>{
     const n = snap.val();
-    if(n && n.ts && Date.now()-n.ts < 15000){
+    if(n && n.ts && n.ts !== lastNewsTs && Date.now()-n.ts < 15000){
+      lastNewsTs = n.ts;
       showNewsPopup(n);
     }
   });
@@ -524,26 +526,40 @@ async function adminPrices(){
   const snap = await get(rStocks());
   const stocks = snap.val();
   if(!stocks) return;
-  const pSnap = await get(rPlayers());
-  const players = pSnap.val()||{};
-  const numPlayers = Math.max(Object.keys(players).length, 1);
+
+  /* read recent trades from last 6 seconds */
+  const tradesSnap = await get(ref(db,`${ROOM}/trades`));
+  const allTrades = tradesSnap.val()||{};
+  const now = Date.now();
+  const recentTrades = Object.values(allTrades).filter(t => now - t.ts < 6000);
 
   stocks.forEach(s=>{
-    /* count net shares held across all players */
-    let totalHeld = 0;
-    Object.values(players).forEach(p=>{ totalHeld += (p.portfolio?.[s.ticker]||0); });
-    /* net demand: positive = more buying pressure, negative = selling pressure  */
-    /* each player holding 1 share = +0.5% per tick; 20 players all holding = +10% */
-    const demandPct = (totalHeld / numPlayers) * 0.005;
-    /* tiny mean-reversion so price doesn't fly forever */
-    const reversion = (s.basePrice ? (s.basePrice - s.price) / s.basePrice * 0.002 : 0);
-    const move = demandPct + reversion;
-    s.price = Math.max(5, s.price * (1 + move));
+    /* count net buy/sell qty in recent window */
+    let netQty = 0;
+    recentTrades.forEach(t=>{
+      if(t.ticker === s.ticker){
+        netQty += (t.action==='buy' ? t.qty : -t.qty);
+      }
+    });
+    /* each net share traded = 0.4% move, capped at ±8% per tick */
+    const move = Math.max(-0.08, Math.min(0.08, netQty * 0.004));
+    /* small mean-reversion toward base price when no trading */
+    const base = s.basePrice || s.price;
+    const reversion = (base - s.price) / base * 0.015;
+    const total = move + (netQty === 0 ? reversion : 0);
+    s.price = Math.max(5, s.price * (1 + total));
     if(!s.basePrice) s.basePrice = s.price;
     if(!s.history) s.history=[];
     s.history.push(s.price);
     if(s.history.length>40) s.history.shift();
   });
+
+  /* clean up old trades */
+  const oldKeys = Object.entries(allTrades).filter(([,t])=> now-t.ts > 6000).map(([k])=>k);
+  const updates = {};
+  oldKeys.forEach(k=>{ updates[`${ROOM}/trades/${k}`]=null; });
+  if(Object.keys(updates).length) await update(ref(db), updates);
+
   await set(rStocks(), stocks);
 }
 
@@ -663,6 +679,11 @@ window.doTrade = async function(action){
     addLog('sell', s.ticker, qty, cost, commission);
   }
 
+  /* write trade event for price engine */
+  const tradeKey = `${myName}_${Date.now()}`;
+  await update(ref(db,`${ROOM}/trades/${tradeKey}`),{
+    ticker: selTicker, action, qty, ts: Date.now()
+  });
   await update(rPlayer(myName),{cash:myCash,portfolio:myPort});
   updateBalance();renderPort();
 };
