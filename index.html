@@ -416,23 +416,28 @@ function startGameUI(){
   const myT = myTeam||'blue';
   document.getElementById('submitBtn').className=`submit-btn ${myT}`;
 
-  /* listen score */
-  onValue(rScore(), snap=>{
+  /* poll score every 2s */
+  setInterval(async()=>{
+    const snap=await get(rScore());
     const s=snap.val()||{blue:0,red:0};
     document.getElementById('bluePts').textContent=s.blue;
     document.getElementById('redPts').textContent=s.red;
-  });
+  },2000);
 
-  /* listen game timer (admin drives it) */
-  onValue(rGame(), snap=>{
+  /* poll game state every 2s — avoids onValue interfering with local question timer */
+  let gameEnded = false;
+  const gamePoll = setInterval(async()=>{
+    const snap=await get(rGame());
     const g=snap.val()||{};
     gameSecsLeft=g.secsLeft??TOTAL_SECS;
     updateTimerUI();
-    if(g.phase==='ended'){
+    if(g.phase==='ended' && !gameEnded){
+      gameEnded=true;
+      clearInterval(gamePoll);
       clearInterval(timerInterval);
       goResult();
     }
-  });
+  },2000);
 
   /* admin drives the global timer */
   if(isAdmin){
