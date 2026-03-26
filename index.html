@@ -388,7 +388,8 @@ function goWait(){
         </div>
       </div>
       <button class="btn btn-green" id="stBtn" onclick="startGame()">🚀 התחל משחק</button>
-      <button class="btn btn-outline" onclick="resetGame()">🗑 אפס הכל</button>
+      <button class="btn btn-outline" onclick="resetGame()">🔄 משחק חדש (שמור קבוצות)</button>
+      <button class="btn btn-outline" style="color:var(--red);border-color:rgba(255,23,68,.3);margin-top:6px;" onclick="fullReset()">🗑 אפס הכל כולל שחקנים</button>
     `; 
   } else {
     document.getElementById('waitMsg').textContent='ממתין למנהל שיתחיל...';
@@ -405,6 +406,7 @@ function goWait(){
     }
     if(g.phase==='playing'&&!isAdmin&&!uiStarted){uiStarted=true;difficulty=g.difficulty||'medium';startUI();}
     if(g.phase==='ended'&&!uiStarted){goRes();}
+    if(g.phase==='waiting'&&uiStarted){location.reload();}
   });
 }
 
@@ -595,12 +597,33 @@ function goRes(){
 
   if(isAdmin){
     document.getElementById('adminResArea').innerHTML=
-      `<button class="btn btn-gold" onclick="resetGame()">🔄 משחק חדש</button>`;
+      `<button class="btn btn-gold" onclick="resetGame()">🔄 משחק חדש (שמור קבוצות)</button>
+       <button class="btn btn-outline" style="color:var(--red);border-color:rgba(255,23,68,.3);margin-top:8px;" onclick="fullReset()">🗑 אפס הכל כולל שחקנים</button>`;
   }
 }
 
-window.resetGame=async function(){  _uiRunning=false;
-  if(!confirm('לאפס את המשחק?'))return;
+window.resetGame=async function(){
+  _uiRunning=false; gameEnded=false;
+  clearInterval(timerInt); clearInterval(pollInt); clearInterval(scorePollInt);
+  /* reset score and game state — keep players */
+  await set(rScore(),{blue:0,red:0});
+  await set(rGame(),{phase:'waiting',secsLeft:gameTime,difficulty,startedAt:0});
+  /* reset each player's stats but keep team */
+  const pSnap=await get(rPlayers());
+  const players=pSnap.val()||{};
+  const updates={};
+  Object.keys(players).forEach(name=>{
+    updates[name]={team:players[name].team,correct:0,wrong:0,joined:players[name].joined};
+  });
+  await set(rPlayers(),updates);
+  /* reset local stats */
+  mC=0; mW=0;
+  goWait();
+};
+
+window.fullReset=async function(){
+  if(!confirm('למחוק גם את כל השחקנים?'))return;
+  _uiRunning=false; gameEnded=false;
   clearInterval(timerInt); clearInterval(pollInt); clearInterval(scorePollInt);
   await remove(ref(db,ROOM));
   location.reload();
