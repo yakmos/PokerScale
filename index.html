@@ -1,825 +1,699 @@
-
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>BULLRUN — Happy Hour</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --green:#00e676;--red:#ff1744;--gold:#ffd600;--blue:#448aff;
+  --bg:#0a0e1a;--surface:#111827;--surface2:#1c2537;--border:rgba(255,255,255,0.08);
+  --mono:'Share Tech Mono',monospace;
+}
+html,body{min-height:100vh;background:var(--bg);color:#e8eaf0;font-family:'Heebo',sans-serif;direction:rtl;}
+#app{max-width:1100px;margin:0 auto;padding:12px 16px 40px;}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:20px;}
+.logo{font-size:22px;font-weight:900;letter-spacing:-1px;color:var(--gold);}
+.logo span{color:#fff;}
+.status-pill{font-size:12px;font-weight:500;padding:4px 14px;border-radius:20px;font-family:var(--mono);}
+.pill-wait{background:rgba(255,214,0,0.12);color:var(--gold);border:1px solid rgba(255,214,0,0.3);}
+.pill-live{background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.3);}
+.pill-end{background:rgba(255,23,68,0.12);color:var(--red);border:1px solid rgba(255,23,68,0.3);}
 
-  body {
-    font-family: 'Heebo', sans-serif;
-    background: #0a0e1a;
-    color: #e8eaf0;
-    min-height: 100vh;
-    direction: rtl;
-  }
+/* Screens */
+.screen{display:none;}.screen.active{display:block;}
 
-  :root {
-    --green: #00e676;
-    --red: #ff1744;
-    --gold: #ffd600;
-    --blue: #448aff;
-    --bg: #0a0e1a;
-    --surface: #111827;
-    --surface2: #1c2537;
-    --border: rgba(255,255,255,0.08);
-    --mono: 'Share Tech Mono', monospace;
-  }
+/* Buttons */
+.btn{padding:12px 24px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:'Heebo',sans-serif;transition:all .15s;}
+.btn:active{transform:scale(0.97);}
+.btn-gold{background:var(--gold);color:#000;}
+.btn-gold:hover{background:#ffe033;}
+.btn-green{background:var(--green);color:#000;}
+.btn-green:hover{filter:brightness(1.1);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{filter:brightness(1.1);}
+.btn-outline{background:transparent;color:#fff;border:1px solid var(--border);}
+.btn-outline:hover{border-color:rgba(255,255,255,0.3);}
+.btn-full{width:100%;margin-top:10px;}
 
-  #app { max-width: 1100px; margin: 0 auto; padding: 16px; }
+/* Join */
+.join-card{max-width:420px;margin:60px auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;}
+.join-card h2{font-size:26px;font-weight:700;margin-bottom:8px;}
+.join-card p{color:rgba(255,255,255,0.45);margin-bottom:28px;font-size:14px;}
+.text-input{width:100%;padding:14px 16px;border-radius:10px;font-size:16px;background:var(--surface2);border:1px solid var(--border);color:#fff;font-family:'Heebo',sans-serif;text-align:center;margin-bottom:16px;outline:none;transition:border .2s;}
+.text-input:focus{border-color:var(--gold);}
+.divider{margin:20px 0;padding-top:20px;border-top:1px solid var(--border);}
+.muted{font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px;}
 
-  /* ── Header ── */
-  .header {
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 20px;
-  }
-  .logo { font-size: 22px; font-weight: 900; letter-spacing: -1px; color: var(--gold); }
-  .logo span { color: #fff; }
-  .status-pill {
-    font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 20px;
-    font-family: var(--mono);
-  }
-  .status-pill.waiting { background: rgba(255,214,0,0.12); color: var(--gold); border: 1px solid rgba(255,214,0,0.3); }
-  .status-pill.trading { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
-  .status-pill.ended { background: rgba(255,23,68,0.12); color: var(--red); border: 1px solid rgba(255,23,68,0.3); }
+/* Waiting */
+.waiting-grid{display:grid;grid-template-columns:1fr 300px;gap:16px;}
+@media(max-width:600px){.waiting-grid{grid-template-columns:1fr;}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.panel-title{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:14px;font-weight:500;letter-spacing:.5px;}
+.player-chip{display:inline-flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;margin:4px;font-size:14px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
+.share-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:12px;word-break:break-all;cursor:pointer;transition:border .2s;}
+.share-box:hover{border-color:var(--gold);}
 
-  /* ── Screens ── */
-  .screen { display: none; }
-  .screen.active { display: block; }
+/* Trading layout */
+.trading-layout{display:grid;grid-template-columns:1fr 340px;gap:14px;}
+@media(max-width:700px){.trading-layout{grid-template-columns:1fr;}}
 
-  /* ── Join screen ── */
-  .join-card {
-    max-width: 420px; margin: 60px auto;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-    padding: 40px; text-align: center;
-  }
-  .join-card h2 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
-  .join-card p { color: rgba(255,255,255,0.5); margin-bottom: 28px; font-size: 14px; }
-  .join-card input {
-    width: 100%; padding: 14px 16px; border-radius: 10px; font-size: 16px;
-    background: var(--surface2); border: 1px solid var(--border); color: #fff;
-    font-family: 'Heebo', sans-serif; text-align: center; margin-bottom: 16px;
-    outline: none; transition: border .2s;
-  }
-  .join-card input:focus { border-color: var(--gold); }
-  .btn {
-    padding: 13px 28px; border-radius: 10px; font-size: 15px; font-weight: 700;
-    cursor: pointer; border: none; font-family: 'Heebo', sans-serif; transition: all .15s;
-  }
-  .btn-gold { background: var(--gold); color: #000; width: 100%; }
-  .btn-gold:hover { background: #ffe033; }
-  .btn-red { background: var(--red); color: #fff; }
-  .btn-green { background: var(--green); color: #000; }
-  .btn-outline { background: transparent; color: #fff; border: 1px solid var(--border); }
-  .btn-outline:hover { border-color: rgba(255,255,255,0.3); }
-  .btn:active { transform: scale(0.97); }
+/* Timer */
+.timer-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.timer-num{font-family:var(--mono);font-size:26px;color:var(--gold);}
+.progress-track{flex:1;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;}
+.progress-fill{height:100%;border-radius:3px;transition:width .9s linear,background .5s;}
 
-  /* ── Waiting screen ── */
-  .waiting-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
-  .players-list {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
-  }
-  .players-list h3 { font-size: 14px; color: rgba(255,255,255,0.4); margin-bottom: 16px; font-weight: 500; }
-  .player-chip {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 20px;
-    padding: 6px 14px; margin: 4px; font-size: 14px;
-  }
-  .player-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
-  .admin-panel {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
-  }
-  .admin-panel h3 { font-size: 14px; color: rgba(255,255,255,0.4); margin-bottom: 16px; font-weight: 500; }
-  .admin-panel .btn { width: 100%; margin-top: 10px; }
+/* News */
+.news-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:14px;}
+.news-label{font-size:10px;font-family:var(--mono);color:var(--gold);margin-bottom:5px;letter-spacing:1px;}
+.news-text{font-size:14px;line-height:1.5;animation:slideIn .5s ease;}
+.bullish{color:#b9f6ca;}.bearish{color:#ff8a80;}.neutral{color:rgba(255,255,255,0.7);}
+@keyframes slideIn{from{transform:translateY(-8px);opacity:0}to{transform:translateY(0);opacity:1}}
 
-  /* ── Trading screen ── */
-  .trading-layout { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
+/* Balance */
+.balance-bar{display:flex;gap:10px;margin-bottom:14px;}
+.balance-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px;}
+.balance-label{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:3px;}
+.balance-value{font-family:var(--mono);font-size:17px;}
 
-  /* Timer */
-  .timer-bar {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 16px 20px; margin-bottom: 16px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .timer-display { font-family: var(--mono); font-size: 28px; font-weight: 400; color: var(--gold); }
-  .progress-track { flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0 20px; }
-  .progress-fill { height: 100%; border-radius: 2px; background: var(--gold); transition: width .5s linear; }
+/* Stocks */
+.stocks-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+@media(max-width:400px){.stocks-grid{grid-template-columns:1fr;}}
+.stock-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .15s;}
+.stock-card:hover{border-color:rgba(255,255,255,0.2);background:var(--surface2);}
+.stock-card.sel{border-color:var(--gold);}
+.stock-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.ticker{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--gold);}
+.sname{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;}
+.price{font-family:var(--mono);font-size:20px;}
+.chg{font-size:12px;font-family:var(--mono);margin-top:3px;}
+.up{color:var(--green);}.down{color:var(--red);}
+.mini-chart{height:38px;margin-top:8px;}
+.mini-chart svg{width:100%;height:100%;}
+.qty-badge{font-family:var(--mono);font-size:11px;padding:2px 8px;background:rgba(255,255,255,0.08);border-radius:10px;}
 
-  /* Stocks grid */
-  .stocks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-  .stock-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 16px; cursor: pointer; transition: all .15s; position: relative; overflow: hidden;
-  }
-  .stock-card:hover { border-color: rgba(255,255,255,0.2); background: var(--surface2); }
-  .stock-card.selected { border-color: var(--gold); }
-  .stock-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-  .stock-ticker { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--gold); }
-  .stock-name { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
-  .stock-price { font-family: var(--mono); font-size: 22px; font-weight: 400; }
-  .stock-change { font-size: 12px; font-family: var(--mono); margin-top: 4px; }
-  .stock-change.up { color: var(--green); }
-  .stock-change.down { color: var(--red); }
-  .mini-chart { height: 40px; margin-top: 10px; }
-  .mini-chart svg { width: 100%; height: 100%; }
+/* Trade panel */
+.portfolio-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px;}
+.portfolio-item:last-child{border-bottom:none;}
+.trade-controls{border-top:1px solid var(--border);padding-top:16px;margin-top:14px;}
+.sel-name{font-size:17px;font-weight:700;margin-bottom:3px;}
+.sel-price{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:14px;}
+.qty-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.qty-row input{flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:#fff;font-size:15px;font-family:var(--mono);text-align:center;outline:none;}
+.qty-row input:focus{border-color:var(--gold);}
+.trade-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.trade-msg{text-align:center;font-size:12px;margin-top:10px;min-height:18px;color:var(--gold);}
 
-  /* Trade panel */
-  .trade-panel {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
-  }
-  .trade-panel h3 { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 16px; font-weight: 500; }
-  .portfolio-item {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px;
-  }
-  .portfolio-item:last-child { border-bottom: none; }
-  .qty-badge {
-    font-family: var(--mono); font-size: 11px; padding: 2px 8px;
-    background: rgba(255,255,255,0.08); border-radius: 10px;
-  }
+/* Leaderboard */
+.lb-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;}
+.lb-row:last-child{border-bottom:none;}
+.lb-rank{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.3);width:18px;}
+.r-gold{color:var(--gold);}.r-silver{color:#b0bec5;}.r-bronze{color:#bf8970;}
+.lb-me{background:rgba(255,214,0,0.05);border-radius:6px;padding:8px;margin:0 -4px;}
 
-  /* Trade controls */
-  .trade-controls { margin-top: 20px; }
-  .selected-stock-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-  .selected-stock-price { font-family: var(--mono); font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 16px; }
-  .qty-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-  .qty-row input {
-    flex: 1; padding: 10px; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 8px; color: #fff; font-size: 15px; font-family: var(--mono);
-    text-align: center; outline: none;
-  }
-  .qty-row input:focus { border-color: var(--gold); }
-  .trade-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* Results */
+.result-wrap{text-align:center;padding:50px 20px;}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:36px 0;}
+.p-place{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 14px;text-align:center;min-width:110px;}
+.p-first{border-color:var(--gold);padding-top:28px;}
+.p-second{border-color:#b0bec5;}
+.p-third{border-color:#bf8970;}
+.p-medal{font-size:26px;margin-bottom:8px;}
+.p-name{font-weight:700;font-size:15px;}
+.p-val{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px;}
+.full-lb{max-width:440px;margin:0 auto;text-align:right;}
 
-  /* News ticker */
-  .news-bar {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 12px 16px; margin-bottom: 16px; overflow: hidden; position: relative;
-  }
-  .news-label {
-    font-size: 10px; font-family: var(--mono); color: var(--gold); margin-bottom: 6px; letter-spacing: 1px;
-  }
-  .news-text { font-size: 14px; line-height: 1.5; }
-  .news-text.bullish { color: #b9f6ca; }
-  .news-text.bearish { color: #ff8a80; }
-  .news-text.neutral { color: rgba(255,255,255,0.7); }
-
-  /* Leaderboard */
-  .leaderboard {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 16px; margin-top: 16px;
-  }
-  .lb-header { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 12px; font-weight: 500; }
-  .lb-row {
-    display: flex; align-items: center; gap: 10px; padding: 8px 0;
-    border-bottom: 1px solid var(--border); font-size: 14px;
-  }
-  .lb-row:last-child { border-bottom: none; }
-  .lb-rank { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.3); width: 20px; }
-  .lb-rank.gold { color: var(--gold); }
-  .lb-rank.silver { color: #b0bec5; }
-  .lb-rank.bronze { color: #bf8970; }
-  .lb-name { flex: 1; }
-  .lb-value { font-family: var(--mono); font-size: 13px; }
-  .lb-me { background: rgba(255,214,0,0.05); border-radius: 6px; padding: 8px; margin: 0 -4px; }
-
-  /* Balance bar */
-  .balance-bar {
-    display: flex; gap: 12px; margin-bottom: 16px;
-  }
-  .balance-card {
-    flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 16px;
-  }
-  .balance-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
-  .balance-value { font-family: var(--mono); font-size: 18px; font-weight: 400; }
-  .balance-value.green { color: var(--green); }
-  .balance-value.gold { color: var(--gold); }
-
-  /* Result screen */
-  .result-screen { text-align: center; padding: 60px 20px; }
-  .podium { display: flex; align-items: flex-end; justify-content: center; gap: 12px; margin: 40px 0; }
-  .podium-place {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 20px 16px; text-align: center; min-width: 120px;
-  }
-  .podium-place.first { border-color: var(--gold); padding-top: 30px; }
-  .podium-place.second { border-color: #b0bec5; }
-  .podium-place.third { border-color: #bf8970; }
-  .podium-medal { font-size: 28px; margin-bottom: 8px; }
-  .podium-name { font-weight: 700; font-size: 16px; }
-  .podium-value { font-family: var(--mono); font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; }
-
-  .flash { animation: flashAnim .4s ease; }
-  @keyframes flashAnim { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-  .news-enter { animation: slideIn .5s ease; }
-  @keyframes slideIn { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
+/* Loading overlay */
+#loadingOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:999;}
+.spinner{width:36px;height:36px;border:3px solid rgba(255,214,0,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
+</head>
+<body>
 
-<div id="app">
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div style="font-family:var(--mono);font-size:13px;color:rgba(255,255,255,0.4);">מתחבר לשרת...</div>
+</div>
+
+<div id="app" style="display:none;">
   <div class="header">
-    <div class="logo">BULL<span>RUN</span> <span style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.3);">Happy Hour Edition</span></div>
-    <div class="status-pill waiting" id="statusPill">ממתין לשחקנים</div>
+    <div class="logo">BULL<span>RUN</span> <span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.3);">Happy Hour</span></div>
+    <div class="status-pill pill-wait" id="statusPill">ממתין</div>
   </div>
 
-  <!-- Join Screen -->
-  <div class="screen active" id="screenJoin">
+  <!-- JOIN -->
+  <div class="screen active" id="sJoin">
     <div class="join-card">
-      <div style="font-size:48px;margin-bottom:16px;">📈</div>
+      <div style="font-size:46px;margin-bottom:14px;">📈</div>
       <h2>ברוך הבא לבורסה</h2>
       <p>הזן את שמך והצטרף למשחק</p>
-      <input type="text" id="playerNameInput" placeholder="השם שלך..." maxlength="20" />
-      <button class="btn btn-gold" onclick="joinGame()">הצטרף למסחר</button>
-      <div style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);">
-        <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px;">מנהל המשחק?</div>
-        <button class="btn btn-outline" style="width:100%;font-size:14px;" onclick="joinAsAdmin()">כניסה כמנהל</button>
+      <input class="text-input" id="nameInput" placeholder="השם שלך..." maxlength="20"/>
+      <button class="btn btn-gold btn-full" onclick="joinGame()">הצטרף למסחר</button>
+      <div class="divider">
+        <div class="muted">מנהל המשחק?</div>
+        <button class="btn btn-outline btn-full" style="font-size:14px;" onclick="joinAsAdmin()">כניסה כמנהל</button>
       </div>
     </div>
   </div>
 
-  <!-- Waiting Screen -->
-  <div class="screen" id="screenWaiting">
+  <!-- WAITING -->
+  <div class="screen" id="sWait">
     <div class="waiting-grid">
-      <div class="players-list">
-        <h3>שחקנים שהצטרפו (<span id="playerCount">0</span>)</h3>
-        <div id="playerChips"></div>
+      <div class="panel">
+        <div class="panel-title">שחקנים שהצטרפו (<span id="pCount">0</span>)</div>
+        <div id="pChips"></div>
       </div>
-      <div class="admin-panel">
-        <h3>לוח מנהל</h3>
-        <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:12px;">
-          שתף את הכתובת עם השחקנים. כשכולם בפנים — לחץ התחל.
-        </div>
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px;word-break:break-all;" id="shareUrl">
-          bull-run.game/room/abc123
-        </div>
-        <button class="btn btn-green" onclick="startGame()" id="startBtn">
-          🚀 התחל מסחר
-        </button>
-        <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,0.25);text-align:center;">
-          מינימום 2 שחקנים להתחלה
-        </div>
+      <div class="panel">
+        <div class="panel-title">לוח מנהל</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:12px;">שתף את הקישור לשחקנים. כשכולם בפנים — לחץ התחל.</div>
+        <div class="share-box" id="shareUrl" onclick="copyLink()" title="לחץ להעתקה"></div>
+        <div id="adminStartArea"></div>
+        <div id="waitMsg" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,0.3);text-align:center;"></div>
       </div>
     </div>
   </div>
 
-  <!-- Trading Screen -->
-  <div class="screen" id="screenTrading">
-    <!-- Timer -->
+  <!-- TRADING -->
+  <div class="screen" id="sTrade">
     <div class="timer-bar">
       <div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:var(--mono);letter-spacing:1px;margin-bottom:2px;">זמן מסחר</div>
-        <div class="timer-display" id="timerDisplay">10:00</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);font-family:var(--mono);letter-spacing:1px;margin-bottom:2px;">זמן מסחר</div>
+        <div class="timer-num" id="timerDisp">10:00</div>
       </div>
-      <div class="progress-track">
-        <div class="progress-fill" id="progressFill" style="width:100%;"></div>
-      </div>
+      <div class="progress-track"><div class="progress-fill" id="progFill" style="width:100%;background:var(--gold);"></div></div>
       <div style="text-align:left;">
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:2px;">שחקנים פעילים</div>
-        <div style="font-family:var(--mono);font-size:20px;" id="activeCount">0</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:2px;">שחקנים</div>
+        <div style="font-family:var(--mono);font-size:18px;" id="aCount">0</div>
       </div>
     </div>
 
-    <!-- News -->
     <div class="news-bar" id="newsBar" style="display:none;">
       <div class="news-label">⚡ BREAKING NEWS</div>
-      <div class="news-text neutral" id="newsText"></div>
+      <div id="newsText" class="news-text neutral"></div>
     </div>
 
-    <!-- Balance -->
     <div class="balance-bar">
-      <div class="balance-card">
-        <div class="balance-label">מזומן</div>
-        <div class="balance-value gold" id="cashDisplay">₪1,000</div>
-      </div>
-      <div class="balance-card">
-        <div class="balance-label">שווי תיק</div>
-        <div class="balance-value" id="portfolioDisplay">₪1,000</div>
-      </div>
-      <div class="balance-card">
-        <div class="balance-label">רווח/הפסד</div>
-        <div class="balance-value" id="pnlDisplay">₪0</div>
-      </div>
+      <div class="balance-card"><div class="balance-label">מזומן</div><div class="balance-value" style="color:var(--gold)" id="cashDisp">₪1,000</div></div>
+      <div class="balance-card"><div class="balance-label">שווי תיק</div><div class="balance-value" id="portDisp">₪1,000</div></div>
+      <div class="balance-card"><div class="balance-label">רווח/הפסד</div><div class="balance-value" id="pnlDisp">₪0</div></div>
     </div>
 
     <div class="trading-layout">
-      <!-- Left: Stocks -->
+      <div><div class="stocks-grid" id="stocksGrid"></div></div>
       <div>
-        <div class="stocks-grid" id="stocksGrid"></div>
-      </div>
-
-      <!-- Right: Trade + Leaderboard -->
-      <div>
-        <div class="trade-panel">
-          <h3>תיק ומסחר</h3>
-          <div id="portfolioItems">
-            <div style="font-size:13px;color:rgba(255,255,255,0.3);text-align:center;padding:20px;">
-              לחץ על מניה לרכישה
+        <div class="panel">
+          <div class="panel-title">תיק ומסחר</div>
+          <div id="portItems"><div style="font-size:13px;color:rgba(255,255,255,0.3);text-align:center;padding:18px;">לחץ על מניה לרכישה</div></div>
+          <div class="trade-controls" id="tradeCtrl" style="display:none;">
+            <div class="sel-name" id="selName">-</div>
+            <div class="sel-price" id="selPrice">-</div>
+            <div class="qty-row">
+              <button class="btn btn-outline" style="padding:9px 13px;" onclick="chgQty(-1)">-</button>
+              <input type="number" id="qtyInp" value="1" min="1" max="999"/>
+              <button class="btn btn-outline" style="padding:9px 13px;" onclick="chgQty(1)">+</button>
             </div>
-          </div>
-          <div class="trade-controls" id="tradeControls" style="display:none;">
-            <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:16px;">
-              <div class="selected-stock-name" id="selectedName">-</div>
-              <div class="selected-stock-price" id="selectedPrice">₪0.00 למניה</div>
-              <div class="qty-row">
-                <button class="btn btn-outline" style="padding:10px 14px;" onclick="changeQty(-1)">-</button>
-                <input type="number" id="qtyInput" value="1" min="1" max="999" />
-                <button class="btn btn-outline" style="padding:10px 14px;" onclick="changeQty(1)">+</button>
-              </div>
-              <div class="trade-btns">
-                <button class="btn btn-green" style="font-size:14px;" onclick="executeTrade('buy')">קנה ✓</button>
-                <button class="btn btn-red" style="font-size:14px;color:#fff;" onclick="executeTrade('sell')">מכור ✗</button>
-              </div>
-              <div id="tradeMsg" style="text-align:center;font-size:12px;margin-top:10px;min-height:18px;color:var(--gold);"></div>
+            <div class="trade-btns">
+              <button class="btn btn-green" style="font-size:14px;" onclick="doTrade('buy')">קנה ✓</button>
+              <button class="btn btn-red" style="font-size:14px;" onclick="doTrade('sell')">מכור ✗</button>
             </div>
+            <div class="trade-msg" id="tradeMsg"></div>
           </div>
         </div>
-
-        <!-- Leaderboard -->
-        <div class="leaderboard">
-          <div class="lb-header">לוח מובילים</div>
-          <div id="leaderboard"></div>
+        <div class="panel" style="margin-top:14px;">
+          <div class="panel-title">לוח מובילים</div>
+          <div id="lbDiv"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Result Screen -->
-  <div class="screen" id="screenResult">
-    <div class="result-screen">
-      <div style="font-size:13px;color:var(--gold);font-family:var(--mono);letter-spacing:2px;margin-bottom:8px;">FINAL RESULTS</div>
-      <h2 style="font-size:32px;font-weight:900;margin-bottom:4px;">סיום מסחר!</h2>
-      <p style="color:rgba(255,255,255,0.4);margin-bottom:20px;">כאן הם הטוב ביותר בחדר</p>
+  <!-- RESULTS -->
+  <div class="screen" id="sResult">
+    <div class="result-wrap">
+      <div style="font-size:12px;color:var(--gold);font-family:var(--mono);letter-spacing:2px;margin-bottom:6px;">FINAL RESULTS</div>
+      <h2 style="font-size:30px;font-weight:900;margin-bottom:4px;">סיום מסחר!</h2>
+      <p style="color:rgba(255,255,255,0.4);margin-bottom:16px;">המנצחים של ה-Happy Hour</p>
       <div class="podium" id="podium"></div>
-      <div id="fullResults" style="max-width:500px;margin:0 auto;text-align:right;"></div>
-      <button class="btn btn-gold" style="margin-top:30px;" onclick="resetGame()">משחק חדש</button>
+      <div class="full-lb" id="fullLb"></div>
+      <button class="btn btn-gold" style="margin-top:28px;" id="restartBtn">משחק חדש</button>
     </div>
   </div>
 </div>
 
-<script>
-const STORAGE_KEY = 'bullrun_game_v3';
-const TOTAL_SECONDS = 600;
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update, remove, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-const STOCKS_DEF = [
-  { ticker: 'TNUVA', name: 'תנובה', price: 120, history: [] },
-  { ticker: 'ELBIT', name: 'אלביט מערכות', price: 85, history: [] },
-  { ticker: 'ICL', name: 'כיל', price: 54, history: [] },
-  { ticker: 'BEZQ', name: 'בזק', price: 37, history: [] },
-  { ticker: 'NICE', name: 'נייס', price: 200, history: [] },
-  { ticker: 'FIBI', name: 'בנק הפועלים', price: 67, history: [] },
-];
-
-const NEWS_EVENTS = [
-  { text: 'תנובה מכריזה על דיבידנד שיא — רבעון חזק במיוחד', sentiment: 'bullish', stock: 'TNUVA', effect: 0.12 },
-  { text: 'אלביט זוכה בחוזה ביטחוני ענק עם משרד הביטחון', sentiment: 'bullish', stock: 'ELBIT', effect: 0.15 },
-  { text: 'מחירי האשלג עולים בחדות בשוק הגלובלי', sentiment: 'bullish', stock: 'ICL', effect: 0.1 },
-  { text: 'בזק מדווחת על ירידה בלקוחות — תחרות חזקה ממתחרים', sentiment: 'bearish', stock: 'BEZQ', effect: -0.11 },
-  { text: 'NICE מאבדת עסקה עם לקוח אסטרטגי בארה"ב', sentiment: 'bearish', stock: 'NICE', effect: -0.13 },
-  { text: 'העלאת ריבית בנק ישראל — לחץ על הבנקים', sentiment: 'bearish', stock: 'FIBI', effect: -0.08 },
-  { text: 'מדד הסנטימנט הכלכלי עולה — שוק בציפיות חיוביות', sentiment: 'bullish', stock: null, effect: 0.05 },
-  { text: 'נתוני אינפלציה גבוהים מהצפוי — שוק בלחץ', sentiment: 'bearish', stock: null, effect: -0.06 },
-  { text: 'קרן גידור זרה רוכשת מניות ישראל בהיקף עצום', sentiment: 'bullish', stock: null, effect: 0.07 },
-  { text: 'חשש ממיתון: משקיעים נוטשים סיכון ועוברים לנזילות', sentiment: 'bearish', stock: null, effect: -0.07 },
-];
-
-let state = {
-  phase: 'join',
-  myName: '',
-  isAdmin: false,
-  players: {},
-  stocks: JSON.parse(JSON.stringify(STOCKS_DEF)).map(s => ({ ...s, history: [s.price] })),
-  secondsLeft: TOTAL_SECONDS,
-  newsHistory: [],
-  myPortfolio: {},
-  myCash: 1000,
-  selectedTicker: null,
+const firebaseConfig = {
+  apiKey: "AIzaSyCBYpYUf6f41A1F4FX1YHllLQVCVlH1XzM",
+  authDomain: "stock-4d6fd.firebaseapp.com",
+  databaseURL: "https://stock-4d6fd-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "stock-4d6fd",
+  storageBucket: "stock-4d6fd.firebasestorage.app",
+  messagingSenderId: "770000973719",
+  appId: "1:770000973719:web:89505dcdfeab8d68549ed2"
 };
 
-let timerInterval = null;
-let priceInterval = null;
-let newsTimeout = null;
-let lastSaved = 0;
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const ROOM = "room1";
+const TOTAL = 600;
 
-function saveState() {
-  const now = Date.now();
-  if (now - lastSaved < 500) return;
-  lastSaved = now;
-  try {
-    window.storage.set(STORAGE_KEY, JSON.stringify({
-      phase: state.phase,
-      players: state.players,
-      stocks: state.stocks,
-      secondsLeft: state.secondsLeft,
-      newsHistory: state.newsHistory,
-    }));
-  } catch(e) {}
-}
+const STOCKS_DEF = [
+  {ticker:'TNUVA',name:'תנובה',price:120},
+  {ticker:'ELBIT',name:'אלביט מערכות',price:85},
+  {ticker:'ICL',  name:'כיל',price:54},
+  {ticker:'BEZQ', name:'בזק',price:37},
+  {ticker:'NICE', name:'נייס',price:200},
+  {ticker:'FIBI', name:'פועלים',price:67},
+];
 
-async function loadState() {
-  try {
-    const r = await window.storage.get(STORAGE_KEY);
-    if (r) {
-      const g = JSON.parse(r.value);
-      state.phase = g.phase;
-      state.players = g.players || {};
-      state.stocks = g.stocks || state.stocks;
-      state.secondsLeft = g.secondsLeft ?? TOTAL_SECONDS;
-      state.newsHistory = g.newsHistory || [];
-    }
-  } catch(e) {}
-}
+const NEWS = [
+  {text:'תנובה מכריזה על דיבידנד שיא — רבעון חזק',sentiment:'bullish',stock:'TNUVA',effect:.12},
+  {text:'אלביט זוכה בחוזה ביטחוני ענק עם משרד הביטחון',sentiment:'bullish',stock:'ELBIT',effect:.15},
+  {text:'מחירי האשלג מזנקים בשוק הגלובלי',sentiment:'bullish',stock:'ICL',effect:.10},
+  {text:'בזק מדווחת על ירידה חדה בלקוחות — תחרות עזה',sentiment:'bearish',stock:'BEZQ',effect:-.11},
+  {text:'NICE מאבדת עסקה אסטרטגית בארה"ב',sentiment:'bearish',stock:'NICE',effect:-.13},
+  {text:'בנק ישראל מעלה ריבית — לחץ על הבנקים',sentiment:'bearish',stock:'FIBI',effect:-.08},
+  {text:'מדד הסנטימנט הכלכלי מזנק — אופטימיות בשוק',sentiment:'bullish',stock:null,effect:.06},
+  {text:'נתוני אינפלציה גבוהים מהצפוי — שוק בלחץ',sentiment:'bearish',stock:null,effect:-.06},
+  {text:'קרן גידור זרה רוכשת מניות ישראל בהיקף עצום',sentiment:'bullish',stock:null,effect:.07},
+  {text:'חשש ממיתון: משקיעים עוברים לנזילות',sentiment:'bearish',stock:null,effect:-.07},
+  {text:'נתוני תעסוקה חיוביים — שוק העבודה חזק',sentiment:'bullish',stock:null,effect:.05},
+  {text:'מתיחות גיאופוליטית מעיבה על השווקים',sentiment:'bearish',stock:null,effect:-.08},
+];
 
-function joinGame() {
-  const name = document.getElementById('playerNameInput').value.trim();
-  if (!name) return;
-  state.myName = name;
-  state.isAdmin = false;
-  loadState().then(() => {
-    if (state.phase === 'trading') {
-      joinPlayer(name);
-      goToTrading();
-    } else if (state.phase === 'ended') {
-      showResults();
-    } else {
-      joinPlayer(name);
-      showWaiting();
-    }
+/* ── local state ── */
+let myName = '';
+let isAdmin = false;
+let selTicker = null;
+let myCash = 1000;
+let myPort = {};
+let gameStocks = STOCKS_DEF.map(s=>({...s,history:[s.price]}));
+let gamePhase = 'join';
+let secondsLeft = TOTAL;
+let timerInt = null;
+let priceInt = null;
+let newsInt = null;
+let allPlayers = {};
+let usedNews = [];
+
+/* ── refs ── */
+const rGame    = ()=>ref(db,`${ROOM}/game`);
+const rStocks  = ()=>ref(db,`${ROOM}/stocks`);
+const rPlayers = ()=>ref(db,`${ROOM}/players`);
+const rPlayer  = (n)=>ref(db,`${ROOM}/players/${n}`);
+const rNews    = ()=>ref(db,`${ROOM}/news`);
+
+/* ── helpers ── */
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function setPill(txt,cls){const p=document.getElementById('statusPill');p.textContent=txt;p.className='status-pill '+cls;}
+
+function copyLink(){
+  navigator.clipboard.writeText(location.href).then(()=>{
+    document.getElementById('shareUrl').textContent='✓ הועתק!';
+    setTimeout(()=>document.getElementById('shareUrl').textContent=location.href,1500);
   });
 }
 
-function joinAsAdmin() {
-  state.myName = 'מנהל';
-  state.isAdmin = true;
-  loadState().then(() => {
-    if (state.phase === 'trading') {
-      goToTrading();
-    } else {
-      showWaiting();
-    }
-  });
-}
-
-function joinPlayer(name) {
-  if (!state.players[name]) {
-    state.players[name] = { cash: 1000, portfolio: {}, joined: Date.now() };
-  }
-  state.myCash = state.players[name].cash;
-  state.myPortfolio = state.players[name].portfolio;
-  saveState();
-}
-
-function showWaiting() {
-  showScreen('screenWaiting');
-  document.getElementById('statusPill').textContent = 'ממתין לשחקנים';
-  document.getElementById('statusPill').className = 'status-pill waiting';
-  refreshWaiting();
-  setInterval(() => {
-    loadState().then(() => {
-      if (state.phase === 'trading' && !state.isAdmin) {
-        joinPlayer(state.myName);
-        goToTrading();
-      }
-      refreshWaiting();
-    });
-  }, 2000);
-}
-
-function refreshWaiting() {
-  const players = Object.keys(state.players);
-  document.getElementById('playerCount').textContent = players.length;
-  const chips = players.map(n => `<span class="player-chip"><span class="player-dot"></span>${n}</span>`).join('');
-  document.getElementById('playerChips').innerHTML = chips || '<span style="color:rgba(255,255,255,0.3);font-size:13px;">אין שחקנים עדיין...</span>';
-}
-
-function startGame() {
-  if (Object.keys(state.players).length < 1) {
-    alert('יש להוסיף לפחות שחקן אחד!'); return;
-  }
-  state.phase = 'trading';
-  state.secondsLeft = TOTAL_SECONDS;
-  state.stocks = JSON.parse(JSON.stringify(STOCKS_DEF)).map(s => ({ ...s, history: [s.price] }));
-  saveState();
-  goToTrading();
-}
-
-function goToTrading() {
-  showScreen('screenTrading');
-  document.getElementById('statusPill').textContent = 'מסחר פעיל';
-  document.getElementById('statusPill').className = 'status-pill trading';
-
-  renderStocks();
-  updateBalance();
-  updateLeaderboard();
-  scheduleNews();
-  startTimer();
-  startPriceUpdates();
-}
-
-function startTimer() {
-  if (timerInterval) clearInterval(timerInterval);
-  updateTimerDisplay();
-  timerInterval = setInterval(() => {
-    loadState().then(() => {
-      if (state.phase !== 'trading') { clearInterval(timerInterval); return; }
-      if (!state.isAdmin) {
-        updateTimerDisplay();
-        updateLeaderboard();
-        renderStocks();
-        updateBalance();
-        return;
-      }
-      state.secondsLeft--;
-      if (state.secondsLeft <= 0) {
-        state.phase = 'ended';
-        clearInterval(timerInterval);
-        clearInterval(priceInterval);
-        saveState();
-        showResults();
-        return;
-      }
-      saveState();
-      updateTimerDisplay();
-      updateLeaderboard();
-    });
-  }, 1000);
-}
-
-function updateTimerDisplay() {
-  const m = Math.floor(state.secondsLeft / 60);
-  const s = state.secondsLeft % 60;
-  document.getElementById('timerDisplay').textContent = `${m}:${s.toString().padStart(2,'0')}`;
-  const pct = (state.secondsLeft / TOTAL_SECONDS) * 100;
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressFill').style.background = pct > 30 ? 'var(--gold)' : 'var(--red)';
-  document.getElementById('activeCount').textContent = Object.keys(state.players).length;
-}
-
-function startPriceUpdates() {
-  if (!state.isAdmin) {
-    setInterval(() => loadState().then(() => { renderStocks(); updateBalance(); }), 3000);
+/* ── JOIN ── */
+window.joinGame = async function(){
+  const n = document.getElementById('nameInput').value.trim();
+  if(!n){alert('אנא הזן שם');return;}
+  myName=n; isAdmin=false;
+  const snap = await get(rGame());
+  const g = snap.val()||{};
+  if(g.phase==='ended'){loadResults();return;}
+  if(g.phase==='trading'){
+    await joinPlayer();
+    loadTradingState();
+    goTrading();
     return;
   }
-  if (priceInterval) clearInterval(priceInterval);
-  priceInterval = setInterval(() => {
-    if (state.phase !== 'trading') return;
-    state.stocks.forEach(stock => {
-      const buyPressure = getTradePressure(stock.ticker);
-      const drift = (Math.random() - 0.48 + buyPressure * 0.03) * 0.025;
-      stock.price = Math.max(5, stock.price * (1 + drift));
-      stock.history.push(stock.price);
-      if (stock.history.length > 40) stock.history.shift();
-    });
-    saveState();
-    renderStocks();
-    updateBalance();
-    updateLeaderboard();
-  }, 3000);
+  await joinPlayer();
+  goWaiting();
+};
+
+window.joinAsAdmin = async function(){
+  myName='מנהל_'+Math.floor(Math.random()*900+100);
+  isAdmin=true;
+  const snap = await get(rGame());
+  const g = snap.val()||{};
+  if(g.phase==='ended'){loadResults();return;}
+  if(g.phase==='trading'){loadTradingState();goTrading();return;}
+  goWaiting();
+};
+
+async function joinPlayer(){
+  const snap = await get(rPlayer(myName));
+  if(!snap.exists()){
+    await set(rPlayer(myName),{cash:1000,portfolio:{},joined:Date.now()});
+  }
+  const p = (await get(rPlayer(myName))).val();
+  myCash = p.cash||1000;
+  myPort = p.portfolio||{};
 }
 
-function getTradePressure(ticker) {
-  let total = 0;
-  Object.values(state.players).forEach(p => {
-    const qty = p.portfolio[ticker] || 0;
-    total += qty;
+/* ── WAITING ── */
+function goWaiting(){
+  show('sWait');setPill('ממתין לשחקנים','pill-wait');
+  document.getElementById('shareUrl').textContent = location.href;
+
+  if(isAdmin){
+    document.getElementById('adminStartArea').innerHTML=
+      `<button class="btn btn-green btn-full" onclick="startGame()">🚀 התחל מסחר</button>`;
+  } else {
+    document.getElementById('adminStartArea').innerHTML='';
+    document.getElementById('waitMsg').textContent='ממתין למנהל שיתחיל את המשחק...';
+  }
+
+  onValue(rPlayers(), snap=>{
+    allPlayers = snap.val()||{};
+    const names = Object.keys(allPlayers);
+    document.getElementById('pCount').textContent = names.length;
+    document.getElementById('pChips').innerHTML = names.map(n=>
+      `<span class="player-chip"><span class="dot"></span>${n}</span>`
+    ).join('') || '<span style="color:rgba(255,255,255,0.3);font-size:13px;">אין שחקנים עדיין...</span>';
   });
-  return Math.min(total / 5, 2);
+
+  onValue(rGame(), snap=>{
+    const g = snap.val()||{};
+    if(g.phase==='trading' && !isAdmin){loadTradingState();goTrading();}
+    if(g.phase==='ended'){loadResults();}
+  });
 }
 
-function scheduleNews() {
-  if (!state.isAdmin) return;
-  const delay = 25000 + Math.random() * 40000;
-  newsTimeout = setTimeout(() => {
-    if (state.phase !== 'trading') return;
-    publishNews();
+/* ── START ── */
+window.startGame = async function(){
+  const stocks = STOCKS_DEF.map(s=>({...s,history:[s.price]}));
+  await set(rStocks(), stocks);
+  await set(rNews(), {text:'',sentiment:'neutral',ts:0});
+  await set(rGame(),{phase:'trading',secondsLeft:TOTAL,startedAt:Date.now()});
+  loadTradingState();
+  goTrading();
+};
+
+/* ── TRADING ── */
+function loadTradingState(){
+  gameStocks = STOCKS_DEF.map(s=>({...s,history:[s.price]}));
+}
+
+function goTrading(){
+  show('sTrade'); setPill('מסחר פעיל','pill-live');
+
+  /* listen stocks */
+  onValue(rStocks(), snap=>{
+    const arr = snap.val();
+    if(arr) gameStocks = arr;
+    renderStocks();updateBalance();updateLB();
+  });
+
+  /* listen news */
+  onValue(rNews(), snap=>{
+    const n = snap.val();
+    if(n && n.ts && Date.now()-n.ts < 30000){
+      const bar=document.getElementById('newsBar');
+      const txt=document.getElementById('newsText');
+      bar.style.display='block';
+      txt.className='news-text '+n.sentiment;
+      txt.textContent=n.text;
+    }
+  });
+
+  /* listen game (timer + phase) */
+  onValue(rGame(), snap=>{
+    const g=snap.val()||{};
+    gamePhase = g.phase;
+    secondsLeft = g.secondsLeft??TOTAL;
+    updateTimerUI();
+    if(g.phase==='ended'){
+      clearInterval(timerInt);clearInterval(priceInt);clearInterval(newsInt);
+      loadResults();
+    }
+  });
+
+  /* listen my player */
+  onValue(rPlayer(myName), snap=>{
+    if(snap.exists()){
+      const p=snap.val();
+      myCash=p.cash||myCash;
+      myPort=p.portfolio||myPort;
+      updateBalance();renderPort();
+    }
+  });
+
+  /* listen all players for LB */
+  onValue(rPlayers(), snap=>{allPlayers=snap.val()||{};updateLB();});
+
+  /* admin: drive timer + prices + news */
+  if(isAdmin){
+    timerInt = setInterval(adminTick, 1000);
+    priceInt = setInterval(adminPrices, 3000);
+    scheduleNews();
+  }
+}
+
+let adminSecLeft = TOTAL;
+async function adminTick(){
+  const snap = await get(rGame());
+  const g = snap.val()||{};
+  if(g.phase!=='trading') return;
+  adminSecLeft = (g.secondsLeft??TOTAL) - 1;
+  if(adminSecLeft<=0){
+    clearInterval(timerInt);clearInterval(priceInt);clearInterval(newsInt);
+    await update(rGame(),{phase:'ended',secondsLeft:0});
+    return;
+  }
+  await update(rGame(),{secondsLeft:adminSecLeft});
+}
+
+async function adminPrices(){
+  const snap = await get(rStocks());
+  const stocks = snap.val();
+  if(!stocks) return;
+  const pSnap = await get(rPlayers());
+  const players = pSnap.val()||{};
+
+  stocks.forEach(s=>{
+    let pressure=0;
+    Object.values(players).forEach(p=>{pressure+=(p.portfolio?.[s.ticker]||0);});
+    pressure = Math.min(pressure/6,2);
+    const drift=(Math.random()-.48+pressure*.025)*.025;
+    s.price = Math.max(5, s.price*(1+drift));
+    if(!s.history)s.history=[];
+    s.history.push(s.price);
+    if(s.history.length>40)s.history.shift();
+  });
+  await set(rStocks(), stocks);
+}
+
+function scheduleNews(){
+  const delay = 20000+Math.random()*35000;
+  newsInt = setTimeout(async()=>{
+    if(gamePhase!=='trading')return;
+    const available = NEWS.filter(n=>!usedNews.includes(n.text));
+    if(!available.length)return;
+    const ev=available[Math.floor(Math.random()*available.length)];
+    usedNews.push(ev.text);
+
+    /* apply effect to stocks */
+    const snap = await get(rStocks());
+    const stocks = snap.val();
+    if(stocks){
+      stocks.forEach(s=>{
+        if(!ev.stock || ev.stock===s.ticker){
+          s.price = Math.max(5, s.price*(1+ev.effect));
+          s.history = s.history||[];
+          s.history.push(s.price);
+        }
+      });
+      await set(rStocks(), stocks);
+    }
+    await set(rNews(),{text:ev.text,sentiment:ev.sentiment,ts:Date.now()});
     scheduleNews();
   }, delay);
 }
 
-function publishNews() {
-  const available = NEWS_EVENTS.filter(n => !state.newsHistory.includes(n.text));
-  if (!available.length) return;
-  const event = available[Math.floor(Math.random() * available.length)];
-  state.newsHistory.push(event.text);
-
-  if (event.stock) {
-    const s = state.stocks.find(s => s.ticker === event.stock);
-    if (s) {
-      s.price = Math.max(5, s.price * (1 + event.effect));
-      s.history.push(s.price);
-    }
-  } else {
-    state.stocks.forEach(s => {
-      s.price = Math.max(5, s.price * (1 + event.effect));
-      s.history.push(s.price);
-    });
-  }
-
-  const bar = document.getElementById('newsBar');
-  const txt = document.getElementById('newsText');
-  bar.style.display = 'block';
-  txt.className = `news-text ${event.sentiment}`;
-  txt.textContent = event.text;
-  txt.classList.add('news-enter');
-  saveState();
-  renderStocks();
+/* ── UI RENDERS ── */
+function updateTimerUI(){
+  const m=Math.floor(secondsLeft/60), s=secondsLeft%60;
+  document.getElementById('timerDisp').textContent=`${m}:${String(s).padStart(2,'0')}`;
+  const pct=(secondsLeft/TOTAL)*100;
+  const fill=document.getElementById('progFill');
+  fill.style.width=pct+'%';
+  fill.style.background=pct>30?'var(--gold)':'var(--red)';
+  document.getElementById('aCount').textContent=Object.keys(allPlayers).length;
 }
 
-function renderStocks() {
-  const grid = document.getElementById('stocksGrid');
-  grid.innerHTML = state.stocks.map(stock => {
-    const prev = stock.history.length > 1 ? stock.history[stock.history.length - 2] : stock.price;
-    const change = ((stock.price - prev) / prev) * 100;
-    const changeClass = change >= 0 ? 'up' : 'down';
-    const changeStr = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
-    const isSelected = state.selectedTicker === stock.ticker;
-    const sparkline = buildSparkline(stock.history, change >= 0);
-    const myQty = state.myPortfolio[stock.ticker] || 0;
-    return `<div class="stock-card${isSelected ? ' selected' : ''}" onclick="selectStock('${stock.ticker}')">
+function renderStocks(){
+  const grid=document.getElementById('stocksGrid');
+  if(!gameStocks||!gameStocks.length)return;
+  grid.innerHTML=gameStocks.map(s=>{
+    const hist=s.history||[s.price];
+    const prev=hist.length>1?hist[hist.length-2]:s.price;
+    const chg=((s.price-prev)/prev)*100;
+    const isUp=chg>=0;
+    const sparkline=buildSpark(hist,isUp);
+    const myQty=myPort[s.ticker]||0;
+    const isSel=selTicker===s.ticker;
+    return `<div class="stock-card${isSel?' sel':''}" onclick="selStock('${s.ticker}')">
       <div class="stock-header">
-        <div>
-          <div class="stock-ticker">${stock.ticker}</div>
-          <div class="stock-name">${stock.name}</div>
-        </div>
-        ${myQty > 0 ? `<span class="qty-badge">×${myQty}</span>` : ''}
+        <div><div class="ticker">${s.ticker}</div><div class="sname">${s.name}</div></div>
+        ${myQty>0?`<span class="qty-badge">×${myQty}</span>`:''}
       </div>
-      <div class="stock-price">₪${stock.price.toFixed(2)}</div>
-      <div class="stock-change ${changeClass}">${change >= 0 ? '▲' : '▼'} ${changeStr}</div>
+      <div class="price">₪${s.price.toFixed(2)}</div>
+      <div class="chg ${isUp?'up':'down'}">${isUp?'▲':'▼'} ${(isUp?'+':'')}${chg.toFixed(2)}%</div>
       <div class="mini-chart">${sparkline}</div>
     </div>`;
   }).join('');
 }
 
-function buildSparkline(history, isUp) {
-  if (history.length < 2) return '';
-  const color = isUp ? '#00e676' : '#ff1744';
-  const w = 200, h = 40;
-  const min = Math.min(...history), max = Math.max(...history);
-  const range = max - min || 1;
-  const pts = history.map((v, i) => {
-    const x = (i / (history.length - 1)) * w;
-    const y = h - ((v - min) / range) * (h - 4) - 2;
+function buildSpark(hist,isUp){
+  if(!hist||hist.length<2)return '';
+  const color=isUp?'#00e676':'#ff1744';
+  const w=200,h=38;
+  const mn=Math.min(...hist),mx=Math.max(...hist),rng=mx-mn||1;
+  const pts=hist.map((v,i)=>{
+    const x=(i/(hist.length-1))*w;
+    const y=h-((v-mn)/rng)*(h-4)-2;
     return `${x},${y}`;
   }).join(' ');
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/></svg>`;
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/></svg>`;
 }
 
-function selectStock(ticker) {
-  state.selectedTicker = ticker;
-  const stock = state.stocks.find(s => s.ticker === ticker);
-  document.getElementById('selectedName').textContent = `${stock.ticker} — ${stock.name}`;
-  document.getElementById('selectedPrice').textContent = `₪${stock.price.toFixed(2)} למניה`;
-  document.getElementById('tradeControls').style.display = 'block';
-  document.getElementById('tradeMsg').textContent = '';
-  renderStocks();
-  renderPortfolio();
-}
+window.selStock = function(ticker){
+  selTicker=ticker;
+  const s=gameStocks.find(s=>s.ticker===ticker);
+  document.getElementById('selName').textContent=`${s.ticker} — ${s.name}`;
+  document.getElementById('selPrice').textContent=`₪${s.price.toFixed(2)} למניה`;
+  document.getElementById('tradeCtrl').style.display='block';
+  document.getElementById('tradeMsg').textContent='';
+  renderStocks();renderPort();
+};
 
-function changeQty(delta) {
-  const input = document.getElementById('qtyInput');
-  input.value = Math.max(1, parseInt(input.value) + delta);
-}
+window.chgQty = function(d){
+  const inp=document.getElementById('qtyInp');
+  inp.value=Math.max(1,parseInt(inp.value||1)+d);
+};
 
-function executeTrade(action) {
-  const stock = state.stocks.find(s => s.ticker === state.selectedTicker);
-  const qty = parseInt(document.getElementById('qtyInput').value) || 1;
-  const cost = stock.price * qty;
-  const msg = document.getElementById('tradeMsg');
+window.doTrade = async function(action){
+  if(!selTicker){return;}
+  const s=gameStocks.find(s=>s.ticker===selTicker);
+  const qty=parseInt(document.getElementById('qtyInp').value)||1;
+  const cost=s.price*qty;
+  const msg=document.getElementById('tradeMsg');
 
-  if (action === 'buy') {
-    if (cost > state.myCash) { msg.style.color='var(--red)'; msg.textContent = 'אין מספיק מזומן!'; return; }
-    state.myCash -= cost;
-    state.myPortfolio[stock.ticker] = (state.myPortfolio[stock.ticker] || 0) + qty;
-    msg.style.color='var(--green)'; msg.textContent = `נרכשו ${qty} מניות!`;
+  if(action==='buy'){
+    if(cost>myCash){msg.style.color='var(--red)';msg.textContent='אין מספיק מזומן!';return;}
+    myCash-=cost;
+    myPort[s.ticker]=(myPort[s.ticker]||0)+qty;
+    msg.style.color='var(--green)';msg.textContent=`נרכשו ${qty} מניות ב-₪${cost.toFixed(0)}`;
   } else {
-    const have = state.myPortfolio[stock.ticker] || 0;
-    if (have < qty) { msg.style.color='var(--red)'; msg.textContent = 'אין מספיק מניות!'; return; }
-    state.myCash += cost;
-    state.myPortfolio[stock.ticker] = have - qty;
-    if (state.myPortfolio[stock.ticker] === 0) delete state.myPortfolio[stock.ticker];
-    msg.style.color='var(--gold)'; msg.textContent = `נמכרו ${qty} מניות!`;
+    const have=myPort[s.ticker]||0;
+    if(have<qty){msg.style.color='var(--red)';msg.textContent='אין מספיק מניות!';return;}
+    myCash+=cost;
+    myPort[s.ticker]=have-qty;
+    if(myPort[s.ticker]===0)delete myPort[s.ticker];
+    msg.style.color='var(--gold)';msg.textContent=`נמכרו ${qty} מניות ב-₪${cost.toFixed(0)}`;
   }
 
-  state.players[state.myName] = { cash: state.myCash, portfolio: state.myPortfolio, joined: state.players[state.myName]?.joined };
-  saveState();
-  updateBalance();
-  renderPortfolio();
-  renderStocks();
-  updateLeaderboard();
-}
+  await update(rPlayer(myName),{cash:myCash,portfolio:myPort});
+  updateBalance();renderPort();
+};
 
-function calcPortfolioValue(player) {
-  let val = player.cash || 0;
-  Object.entries(player.portfolio || {}).forEach(([ticker, qty]) => {
-    const stock = state.stocks.find(s => s.ticker === ticker);
-    if (stock) val += stock.price * qty;
+function calcTotal(p){
+  let v=p.cash||0;
+  Object.entries(p.portfolio||{}).forEach(([ticker,qty])=>{
+    const s=gameStocks.find(s=>s.ticker===ticker);
+    if(s)v+=s.price*qty;
   });
-  return val;
+  return v;
 }
 
-function updateBalance() {
-  const total = calcPortfolioValue({ cash: state.myCash, portfolio: state.myPortfolio });
-  const pnl = total - 1000;
-  document.getElementById('cashDisplay').textContent = `₪${state.myCash.toFixed(0)}`;
-  document.getElementById('portfolioDisplay').textContent = `₪${total.toFixed(0)}`;
-  const pnlEl = document.getElementById('pnlDisplay');
-  pnlEl.textContent = (pnl >= 0 ? '+' : '') + `₪${pnl.toFixed(0)}`;
-  pnlEl.className = 'balance-value ' + (pnl >= 0 ? 'green' : '');
-  if (pnl < 0) pnlEl.style.color = 'var(--red)'; else pnlEl.style.color = '';
+function updateBalance(){
+  const total=calcTotal({cash:myCash,portfolio:myPort});
+  const pnl=total-1000;
+  document.getElementById('cashDisp').textContent=`₪${myCash.toFixed(0)}`;
+  document.getElementById('portDisp').textContent=`₪${total.toFixed(0)}`;
+  const el=document.getElementById('pnlDisp');
+  el.textContent=(pnl>=0?'+':'')+'₪'+pnl.toFixed(0);
+  el.style.color=pnl>=0?'var(--green)':'var(--red)';
 }
 
-function renderPortfolio() {
-  const container = document.getElementById('portfolioItems');
-  const items = Object.entries(state.myPortfolio).filter(([,q]) => q > 0);
-  if (!items.length) {
-    container.innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,0.3);text-align:center;padding:12px;">אין מניות בתיק</div>';
-    return;
-  }
-  container.innerHTML = items.map(([ticker, qty]) => {
-    const stock = state.stocks.find(s => s.ticker === ticker);
+function renderPort(){
+  const items=Object.entries(myPort).filter(([,q])=>q>0);
+  const c=document.getElementById('portItems');
+  if(!items.length){c.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,0.3);text-align:center;padding:14px;">אין מניות בתיק</div>';return;}
+  c.innerHTML=items.map(([ticker,qty])=>{
+    const s=gameStocks.find(s=>s.ticker===ticker);
+    const val=s?s.price*qty:0;
     return `<div class="portfolio-item">
       <div><span style="font-family:var(--mono);font-size:13px;color:var(--gold);">${ticker}</span><br><span style="font-size:11px;color:rgba(255,255,255,0.4);">×${qty}</span></div>
-      <div style="text-align:left;"><span style="font-family:var(--mono);font-size:13px;">₪${(stock ? stock.price * qty : 0).toFixed(0)}</span></div>
+      <div style="font-family:var(--mono);font-size:13px;">₪${val.toFixed(0)}</div>
     </div>`;
   }).join('');
 }
 
-function updateLeaderboard() {
-  const ranked = Object.entries(state.players).map(([name, p]) => ({
-    name, total: calcPortfolioValue(p)
-  })).sort((a,b) => b.total - a.total);
-
-  const medals = ['gold','silver','bronze'];
-  const html = ranked.slice(0,8).map((p,i) => {
-    const isMe = p.name === state.myName;
+function updateLB(){
+  const ranked=Object.entries(allPlayers).map(([name,p])=>({name,total:calcTotal(p)})).sort((a,b)=>b.total-a.total);
+  const medals=['r-gold','r-silver','r-bronze'];
+  document.getElementById('lbDiv').innerHTML=ranked.slice(0,10).map((p,i)=>{
+    const isMe=p.name===myName;
     return `<div class="lb-row${isMe?' lb-me':''}">
       <div class="lb-rank ${medals[i]||''}">${i+1}</div>
-      <div class="lb-name" style="${isMe?'font-weight:700;':''}">${p.name}${isMe?' ★':''}</div>
-      <div class="lb-value" style="color:${p.total>=1000?'var(--green)':'var(--red)'}">₪${p.total.toFixed(0)}</div>
+      <div style="flex:1;${isMe?'font-weight:700;':''}">${p.name}${isMe?' ★':''}</div>
+      <div style="font-family:var(--mono);font-size:13px;color:${p.total>=1000?'var(--green)':'var(--red)'}">₪${p.total.toFixed(0)}</div>
     </div>`;
   }).join('');
-  document.getElementById('leaderboard').innerHTML = html;
 }
 
-function showResults() {
-  loadState().then(() => {
-    showScreen('screenResult');
-    document.getElementById('statusPill').textContent = 'המשחק הסתיים';
-    document.getElementById('statusPill').className = 'status-pill ended';
+/* ── RESULTS ── */
+function loadResults(){
+  show('sResult');setPill('המשחק הסתיים','pill-end');
 
-    const ranked = Object.entries(state.players).map(([name, p]) => ({
-      name, total: calcPortfolioValue(p)
-    })).sort((a,b) => b.total - a.total);
+  onValue(rPlayers(), snap=>{
+    const players=snap.val()||{};
+    const ranked=Object.entries(players).map(([name,p])=>({name,total:calcTotal(p)})).sort((a,b)=>b.total-a.total);
 
-    const podiumConfig = [
-      { cls: 'second', medal: '🥈', idx: 1 },
-      { cls: 'first', medal: '🥇', idx: 0 },
-      { cls: 'third', medal: '🥉', idx: 2 },
-    ];
-    const podiumHtml = podiumConfig.filter(c => ranked[c.idx]).map(c => {
-      const p = ranked[c.idx];
-      return `<div class="podium-place ${c.cls}">
-        <div class="podium-medal">${c.medal}</div>
-        <div class="podium-name">${p.name}</div>
-        <div class="podium-value">₪${p.total.toFixed(0)}</div>
-      </div>`;
+    const cfg=[{cls:'p-second',medal:'🥈',i:1},{cls:'p-first',medal:'🥇',i:0},{cls:'p-third',medal:'🥉',i:2}];
+    document.getElementById('podium').innerHTML=cfg.filter(c=>ranked[c.i]).map(c=>{
+      const p=ranked[c.i];
+      return `<div class="p-place ${c.cls}"><div class="p-medal">${c.medal}</div><div class="p-name">${p.name}</div><div class="p-val">₪${p.total.toFixed(0)}</div></div>`;
     }).join('');
-    document.getElementById('podium').innerHTML = podiumHtml;
 
-    const fullHtml = ranked.slice(3).map((p,i) => `
-      <div class="lb-row">
-        <div class="lb-rank">${i+4}</div>
-        <div class="lb-name">${p.name}</div>
-        <div class="lb-value">₪${p.total.toFixed(0)}</div>
-      </div>`).join('');
-    document.getElementById('fullResults').innerHTML = fullHtml;
+    document.getElementById('fullLb').innerHTML=ranked.slice(3).map((p,i)=>
+      `<div class="lb-row"><div class="lb-rank">${i+4}</div><div style="flex:1">${p.name}</div><div style="font-family:var(--mono);font-size:13px;">₪${p.total.toFixed(0)}</div></div>`
+    ).join('');
   });
+
+  document.getElementById('restartBtn').onclick = async ()=>{
+    await remove(ref(db,ROOM));
+    location.reload();
+  };
 }
 
-function resetGame() {
-  state.phase = 'join';
-  state.players = {};
-  state.stocks = JSON.parse(JSON.stringify(STOCKS_DEF)).map(s => ({ ...s, history: [s.price] }));
-  state.secondsLeft = TOTAL_SECONDS;
-  state.newsHistory = [];
-  state.myCash = 1000;
-  state.myPortfolio = {};
-  state.myName = '';
-  state.selectedTicker = null;
-  if (timerInterval) clearInterval(timerInterval);
-  if (priceInterval) clearInterval(priceInterval);
-  try { window.storage.delete(STORAGE_KEY); } catch(e) {}
-  showScreen('screenJoin');
-  document.getElementById('statusPill').textContent = 'ממתין לשחקנים';
-  document.getElementById('statusPill').className = 'status-pill waiting';
+/* ── INIT ── */
+async function init(){
+  document.getElementById('loadingOverlay').style.display='none';
+  document.getElementById('app').style.display='block';
+  const snap=await get(rGame());
+  const g=snap.val()||{};
+  if(g.phase==='trading'||g.phase==='ended'){
+    document.getElementById('nameInput').placeholder='השם שלך...';
+  }
 }
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-document.getElementById('playerNameInput').addEventListener('keypress', e => {
-  if (e.key === 'Enter') joinGame();
-});
+document.getElementById('nameInput').addEventListener('keypress',e=>{if(e.key==='Enter')window.joinGame();});
+init();
 </script>
+</body>
+</html>
