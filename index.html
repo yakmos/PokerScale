@@ -2,279 +2,254 @@
 <html dir="rtl" lang="he">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-<title>BULLRUN — Happy Hour</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>MATH BATTLE — Happy Hour</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&family=Share+Tech+Mono&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --green:#00e676;--red:#ff1744;--gold:#ffd600;--blue:#448aff;
+  --blue:#2979ff;--blue-light:#82b1ff;--blue-bg:rgba(41,121,255,0.12);
+  --red:#ff1744;--red-light:#ff8a80;--red-bg:rgba(255,23,68,0.12);
+  --gold:#ffd600;--green:#00e676;
   --bg:#0a0e1a;--surface:#111827;--surface2:#1c2537;--border:rgba(255,255,255,0.08);
   --mono:'Share Tech Mono',monospace;
 }
 html,body{min-height:100vh;background:var(--bg);color:#e8eaf0;font-family:'Heebo',sans-serif;direction:rtl;}
-#app{max-width:1100px;margin:0 auto;padding:12px 16px 40px;}
+#app{max-width:600px;margin:0 auto;padding:16px 16px 40px;}
 
-/* Header */
 .header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:20px;}
-.logo{font-size:22px;font-weight:900;letter-spacing:-1px;color:var(--gold);}
-.logo span{color:#fff;}
-.status-pill{font-size:12px;font-weight:500;padding:4px 14px;border-radius:20px;font-family:var(--mono);}
-.pill-wait{background:rgba(255,214,0,0.12);color:var(--gold);border:1px solid rgba(255,214,0,0.3);}
-.pill-live{background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.3);}
-.pill-end{background:rgba(255,23,68,0.12);color:var(--red);border:1px solid rgba(255,23,68,0.3);}
+.logo{font-size:20px;font-weight:900;letter-spacing:-1px;}
+.logo .b{color:var(--blue-light);}.logo .r{color:var(--red-light);}
+.pill{font-size:11px;padding:4px 12px;border-radius:20px;font-family:var(--mono);}
+.pill-wait{background:rgba(255,214,0,.12);color:var(--gold);border:1px solid rgba(255,214,0,.3);}
+.pill-live{background:rgba(0,230,118,.12);color:var(--green);border:1px solid rgba(0,230,118,.3);}
+.pill-end{background:rgba(255,23,68,.12);color:var(--red);border:1px solid rgba(255,23,68,.3);}
 
-/* Screens */
 .screen{display:none;}.screen.active{display:block;}
 
-/* Buttons */
-.btn{padding:12px 24px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:'Heebo',sans-serif;transition:all .15s;}
-.btn:active{transform:scale(0.97);}
+/* ── JOIN ── */
+.join-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 28px;text-align:center;margin-top:20px;}
+.join-card h2{font-size:24px;font-weight:900;margin-bottom:6px;}
+.join-card p{color:rgba(255,255,255,.45);font-size:14px;margin-bottom:24px;}
+.text-input{width:100%;padding:13px 16px;border-radius:10px;font-size:16px;background:var(--surface2);border:1px solid var(--border);color:#fff;font-family:'Heebo',sans-serif;text-align:center;margin-bottom:14px;outline:none;transition:border .2s;}
+.text-input:focus{border-color:var(--gold);}
+
+.team-pick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.team-btn{padding:18px 12px;border-radius:12px;border:2px solid transparent;cursor:pointer;font-family:'Heebo',sans-serif;font-size:16px;font-weight:700;transition:all .15s;background:var(--surface2);}
+.team-btn.blue{border-color:var(--blue);color:var(--blue-light);}
+.team-btn.blue:hover,.team-btn.blue.sel{background:var(--blue-bg);border-color:var(--blue-light);}
+.team-btn.red{border-color:var(--red);color:var(--red-light);}
+.team-btn.red:hover,.team-btn.red.sel{background:var(--red-bg);border-color:var(--red-light);}
+.team-btn.sel{transform:scale(1.03);}
+
+.btn{padding:13px 24px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:'Heebo',sans-serif;transition:all .15s;width:100%;}
+.btn:active{transform:scale(.97);}
 .btn-gold{background:var(--gold);color:#000;}
 .btn-gold:hover{background:#ffe033;}
 .btn-green{background:var(--green);color:#000;}
-.btn-green:hover{filter:brightness(1.1);}
 .btn-red{background:var(--red);color:#fff;}
-.btn-red:hover{filter:brightness(1.1);}
-.btn-outline{background:transparent;color:#fff;border:1px solid var(--border);}
-.btn-outline:hover{border-color:rgba(255,255,255,0.3);}
-.btn-full{width:100%;margin-top:10px;}
+.btn-outline{background:transparent;color:#fff;border:1px solid var(--border);margin-top:10px;}
+.btn-outline:hover{border-color:rgba(255,255,255,.3);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
 
-/* Join */
-.join-card{max-width:420px;margin:60px auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;}
-.join-card h2{font-size:26px;font-weight:700;margin-bottom:8px;}
-.join-card p{color:rgba(255,255,255,0.45);margin-bottom:28px;font-size:14px;}
-.text-input{width:100%;padding:14px 16px;border-radius:10px;font-size:16px;background:var(--surface2);border:1px solid var(--border);color:#fff;font-family:'Heebo',sans-serif;text-align:center;margin-bottom:16px;outline:none;transition:border .2s;}
-.text-input:focus{border-color:var(--gold);}
-.divider{margin:20px 0;padding-top:20px;border-top:1px solid var(--border);}
-.muted{font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px;}
+/* ── WAITING ── */
+.scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.team-card{border-radius:14px;padding:18px;text-align:center;border:1px solid transparent;}
+.team-card.blue{background:var(--blue-bg);border-color:rgba(41,121,255,.3);}
+.team-card.red{background:var(--red-bg);border-color:rgba(255,23,68,.3);}
+.team-label{font-size:11px;font-family:var(--mono);letter-spacing:1px;margin-bottom:10px;}
+.team-label.blue{color:var(--blue-light);}.team-label.red{color:var(--red-light);}
+.team-count{font-size:32px;font-weight:900;margin-bottom:8px;}
+.team-count.blue{color:var(--blue-light);}.team-count.red{color:var(--red-light);}
+.player-list{font-size:12px;color:rgba(255,255,255,.5);line-height:1.8;min-height:40px;}
 
-/* Waiting */
-.waiting-grid{display:grid;grid-template-columns:1fr 300px;gap:16px;}
-@media(max-width:600px){.waiting-grid{grid-template-columns:1fr;}}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
-.panel-title{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:14px;font-weight:500;letter-spacing:.5px;}
-.player-chip{display:inline-flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;margin:4px;font-size:14px;}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
-.share-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:12px;word-break:break-all;cursor:pointer;transition:border .2s;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px;}
+.panel-title{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px;font-weight:500;letter-spacing:.5px;}
+.warn{font-size:13px;color:var(--gold);text-align:center;padding:10px;font-weight:700;}
+.share-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5);margin-bottom:10px;word-break:break-all;cursor:pointer;}
 .share-box:hover{border-color:var(--gold);}
 
-/* Trading layout */
-.trading-layout{display:grid;grid-template-columns:1fr 340px;gap:14px;}
-@media(max-width:700px){.trading-layout{grid-template-columns:1fr;}}
+/* ── GAME ── */
+.timer-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.timer-num{font-family:var(--mono);font-size:24px;color:var(--gold);min-width:48px;}
+.prog-track{flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:3px;}
+.prog-fill{height:100%;border-radius:3px;transition:width .9s linear,background .5s;}
 
-/* Timer */
-.timer-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
-.timer-num{font-family:var(--mono);font-size:26px;color:var(--gold);}
-.progress-track{flex:1;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;}
-.progress-fill{height:100%;border-radius:3px;transition:width .9s linear,background .5s;}
+.live-score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin-bottom:16px;}
+.ls-team{text-align:center;padding:14px 10px;border-radius:12px;border:1px solid transparent;}
+.ls-team.blue{background:var(--blue-bg);border-color:rgba(41,121,255,.25);}
+.ls-team.red{background:var(--red-bg);border-color:rgba(255,23,68,.25);}
+.ls-label{font-size:10px;font-family:var(--mono);letter-spacing:1px;margin-bottom:4px;}
+.ls-label.blue{color:var(--blue-light);}.ls-label.red{color:var(--red-light);}
+.ls-pts{font-size:36px;font-weight:900;line-height:1;}
+.ls-pts.blue{color:var(--blue-light);}.ls-pts.red{color:var(--red-light);}
+.vs{font-size:14px;color:rgba(255,255,255,.3);font-family:var(--mono);}
 
-/* News */
-.news-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:14px;}
-.news-label{font-size:10px;font-family:var(--mono);color:var(--gold);margin-bottom:5px;letter-spacing:1px;}
-.news-text{font-size:14px;line-height:1.5;animation:slideIn .5s ease;}
-.bullish{color:#b9f6ca;}.bearish{color:#ff8a80;}.neutral{color:rgba(255,255,255,0.7);}
-@keyframes slideIn{from{transform:translateY(-8px);opacity:0}to{transform:translateY(0);opacity:1}}
+.q-card{background:var(--surface);border:2px solid var(--border);border-radius:16px;padding:28px 24px;text-align:center;margin-bottom:14px;transition:border .3s;}
+.q-card.correct{border-color:var(--green);}
+.q-card.wrong{border-color:var(--red);}
+.q-card.timeout{border-color:rgba(255,255,255,.2);}
+.q-label{font-size:11px;font-family:var(--mono);letter-spacing:1px;color:rgba(255,255,255,.4);margin-bottom:10px;}
+.q-text{font-size:42px;font-weight:900;margin-bottom:6px;font-family:var(--mono);}
+.q-timer{font-size:13px;font-family:var(--mono);margin-bottom:20px;}
+.q-timer.urgent{color:var(--red);}
+.q-timer.ok{color:rgba(255,255,255,.4);}
 
-/* Balance */
-.balance-bar{display:flex;gap:10px;margin-bottom:14px;}
-.balance-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px;}
-.balance-label{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:3px;}
-.balance-value{font-family:var(--mono);font-size:17px;}
+.ans-input{width:100%;padding:16px;border-radius:10px;font-size:28px;font-family:var(--mono);background:var(--surface2);border:2px solid var(--border);color:#fff;text-align:center;outline:none;transition:border .2s;-moz-appearance:textfield;}
+.ans-input::-webkit-outer-spin-button,.ans-input::-webkit-inner-spin-button{-webkit-appearance:none;}
+.ans-input:focus{border-color:var(--gold);}
+.submit-btn{margin-top:10px;padding:14px;border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;border:none;font-family:'Heebo',sans-serif;width:100%;transition:all .15s;}
+.submit-btn.blue{background:var(--blue);color:#fff;}
+.submit-btn.red{background:var(--red);color:#fff;}
+.submit-btn:disabled{opacity:.4;cursor:not-allowed;}
 
-/* Stocks */
-.stocks-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-@media(max-width:400px){.stocks-grid{grid-template-columns:1fr;}}
-.stock-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .15s;}
-.stock-card:hover{border-color:rgba(255,255,255,0.2);background:var(--surface2);}
-.stock-card.sel{border-color:var(--gold);}
-.stock-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
-.ticker{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--gold);}
-.sname{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;}
-.price{font-family:var(--mono);font-size:20px;}
-.chg{font-size:12px;font-family:var(--mono);margin-top:3px;}
-.up{color:var(--green);}.down{color:var(--red);}
-.mini-chart{height:38px;margin-top:8px;}
-.mini-chart svg{width:100%;height:100%;}
-.qty-badge{font-family:var(--mono);font-size:11px;padding:2px 8px;background:rgba(255,255,255,0.08);border-radius:10px;}
+.feedback{font-size:20px;font-weight:700;text-align:center;padding:14px;border-radius:10px;margin-top:10px;}
+.feedback.correct{background:rgba(0,230,118,.15);color:var(--green);}
+.feedback.wrong{background:rgba(255,23,68,.15);color:var(--red);}
+.feedback.timeout{background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);}
 
-/* Trade panel */
-.portfolio-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px;}
-.portfolio-item:last-child{border-bottom:none;}
-.trade-controls{border-top:1px solid var(--border);padding-top:16px;margin-top:14px;}
-.sel-name{font-size:17px;font-weight:700;margin-bottom:3px;}
-.sel-price{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:14px;}
-.qty-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
-.qty-row input{flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:#fff;font-size:15px;font-family:var(--mono);text-align:center;outline:none;}
-.qty-row input:focus{border-color:var(--gold);}
-.trade-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.trade-msg{text-align:center;font-size:12px;margin-top:10px;min-height:18px;color:var(--gold);}
+.my-stats{display:flex;gap:10px;margin-bottom:14px;}
+.stat-box{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;}
+.stat-label{font-size:10px;color:rgba(255,255,255,.4);margin-bottom:3px;}
+.stat-val{font-size:20px;font-weight:700;font-family:var(--mono);}
 
-/* Leaderboard */
-.lb-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;}
-.lb-row:last-child{border-bottom:none;}
-.lb-rank{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.3);width:18px;}
-.r-gold{color:var(--gold);}.r-silver{color:#b0bec5;}.r-bronze{color:#bf8970;}
-.lb-me{background:rgba(255,214,0,0.05);border-radius:6px;padding:8px;margin:0 -4px;}
+/* ── RESULTS ── */
+.result-wrap{text-align:center;padding:30px 0;}
+.winner-banner{border-radius:16px;padding:28px;margin-bottom:20px;border:2px solid transparent;}
+.winner-banner.blue{background:var(--blue-bg);border-color:var(--blue);}
+.winner-banner.red{background:var(--red-bg);border-color:var(--red);}
+.winner-banner.tie{background:rgba(255,214,0,.08);border-color:var(--gold);}
+.winner-emoji{font-size:52px;margin-bottom:8px;}
+.winner-title{font-size:26px;font-weight:900;margin-bottom:4px;}
+.winner-sub{font-size:14px;color:rgba(255,255,255,.5);}
+.final-score{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.fs-card{border-radius:12px;padding:16px;text-align:center;}
+.fs-card.blue{background:var(--blue-bg);}
+.fs-card.red{background:var(--red-bg);}
+.fs-label{font-size:11px;font-family:var(--mono);letter-spacing:1px;margin-bottom:6px;}
+.fs-label.blue{color:var(--blue-light);}.fs-label.red{color:var(--red-light);}
+.fs-pts{font-size:40px;font-weight:900;}
+.fs-pts.blue{color:var(--blue-light);}.fs-pts.red{color:var(--red-light);}
 
-/* Results */
-.result-wrap{text-align:center;padding:50px 20px;}
-.podium{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:36px 0;}
-.p-place{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 14px;text-align:center;min-width:110px;}
-.p-first{border-color:var(--gold);padding-top:28px;}
-.p-second{border-color:#b0bec5;}
-.p-third{border-color:#bf8970;}
-.p-medal{font-size:26px;margin-bottom:8px;}
-.p-name{font-weight:700;font-size:15px;}
-.p-val{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px;}
-.full-lb{max-width:440px;margin:0 auto;text-align:right;}
-
-/* Loading overlay */
-#loadingOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:999;}
-.spinner{width:36px;height:36px;border:3px solid rgba(255,214,0,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;}
+#loadingOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:999;}
+.spinner{width:34px;height:34px;border:3px solid rgba(255,214,0,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* News popup */
-.news-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:999;animation:fadeIn .3s ease;}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.news-popup{background:var(--surface);border:2px solid var(--gold);border-radius:20px;padding:36px 40px;max-width:520px;width:90%;text-align:center;position:relative;animation:popIn .35s cubic-bezier(.34,1.56,.64,1);}
-@keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
-.news-popup .np-label{font-size:11px;font-family:var(--mono);letter-spacing:2px;color:var(--gold);margin-bottom:12px;}
-.news-popup .np-text{font-size:20px;font-weight:700;line-height:1.4;margin-bottom:20px;}
-.news-popup .np-effect{font-size:14px;font-family:var(--mono);margin-bottom:20px;}
-.news-popup .np-timer{font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:16px;font-family:var(--mono);}
-.news-popup .np-close{background:rgba(255,255,255,0.1);border:1px solid var(--border);color:#fff;padding:8px 24px;border-radius:8px;cursor:pointer;font-size:14px;font-family:'Heebo',sans-serif;}
-.news-popup .np-close:hover{background:rgba(255,255,255,0.18);}
+.next-pulse{animation:pulse .6s ease;}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
 </style>
 </head>
 <body>
 
 <div id="loadingOverlay">
   <div class="spinner"></div>
-  <div style="font-family:var(--mono);font-size:13px;color:rgba(255,255,255,0.4);">מתחבר לשרת...</div>
+  <div style="font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.4);">מתחבר...</div>
 </div>
 
 <div id="app" style="display:none;">
   <div class="header">
-    <div class="logo">BULL<span>RUN</span> <span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.3);">Happy Hour</span></div>
-    <div class="status-pill pill-wait" id="statusPill">ממתין</div>
+    <div class="logo"><span class="b">MATH</span> <span class="r">BATTLE</span> <span style="font-size:12px;font-weight:400;color:rgba(255,255,255,.3);">Happy Hour</span></div>
+    <div class="pill pill-wait" id="statusPill">ממתין</div>
   </div>
 
   <!-- JOIN -->
   <div class="screen active" id="sJoin">
     <div class="join-card">
-      <div style="font-size:46px;margin-bottom:14px;">📈</div>
-      <h2>ברוך הבא לבורסה</h2>
-      <p>הזן את שמך והצטרף למשחק</p>
-      <input class="text-input" id="nameInput" placeholder="השם שלך..." maxlength="20"/>
-      <button class="btn btn-gold btn-full" onclick="joinGame()">הצטרף למסחר</button>
-      <div class="divider">
-        <div class="muted">מנהל המשחק?</div>
-        <button class="btn btn-outline btn-full" style="font-size:14px;" onclick="joinAsAdmin()">כניסה כמנהל</button>
+      <div style="font-size:44px;margin-bottom:12px;">🧮</div>
+      <h2>Math Battle</h2>
+      <p>הזן שם ובחר קבוצה</p>
+      <input class="text-input" id="nameInput" placeholder="השם שלך..." maxlength="16"/>
+      <div class="team-pick">
+        <button class="team-btn blue" id="btnBlue" onclick="pickTeam('blue')">🔵 קבוצה כחולה</button>
+        <button class="team-btn red"  id="btnRed"  onclick="pickTeam('red')">🔴 קבוצה אדומה</button>
+      </div>
+      <button class="btn btn-gold" id="joinBtn" onclick="joinGame()" disabled>הצטרף</button>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-size:12px;color:rgba(255,255,255,.3);margin-bottom:8px;">מנהל המשחק?</div>
+        <button class="btn btn-outline" onclick="joinAsAdmin()">כניסה כמנהל</button>
       </div>
     </div>
   </div>
 
   <!-- WAITING -->
   <div class="screen" id="sWait">
-    <div class="waiting-grid">
-      <div class="panel">
-        <div class="panel-title">שחקנים שהצטרפו (<span id="pCount">0</span>)</div>
-        <div id="pChips"></div>
+    <div class="scoreboard">
+      <div class="team-card blue">
+        <div class="team-label blue">TEAM BLUE 🔵</div>
+        <div class="team-count blue" id="blueCount">0</div>
+        <div class="player-list" id="bluePlayers"></div>
       </div>
-      <div class="panel">
-        <div class="panel-title">לוח מנהל</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:12px;">שתף את הקישור לשחקנים. כשכולם בפנים — לחץ התחל.</div>
-        <div class="share-box" id="shareUrl" onclick="copyLink()" title="לחץ להעתקה"></div>
-        <div id="adminStartArea"></div>
-        <button class="btn btn-outline btn-full" style="font-size:13px;margin-top:6px;color:var(--red);border-color:rgba(255,23,68,0.3);" onclick="resetPlayers()">🗑 אפס שחקנים</button>
-        <div id="waitMsg" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,0.3);text-align:center;"></div>
+      <div class="team-card red">
+        <div class="team-label red">TEAM RED 🔴</div>
+        <div class="team-count red" id="redCount">0</div>
+        <div class="player-list" id="redPlayers"></div>
       </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">מנהל</div>
+      <div class="share-box" id="shareUrl" onclick="copyLink()"></div>
+      <div id="balanceWarn" class="warn" style="display:none;"></div>
+      <div id="adminArea"></div>
+      <div id="waitMsg" style="font-size:13px;color:rgba(255,255,255,.35);text-align:center;margin-top:8px;"></div>
     </div>
   </div>
 
-  <!-- TRADING -->
-  <div class="screen" id="sTrade">
-    <div class="timer-bar">
-      <div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);font-family:var(--mono);letter-spacing:1px;margin-bottom:2px;">זמן מסחר</div>
-        <div class="timer-num" id="timerDisp">10:00</div>
+  <!-- GAME -->
+  <div class="screen" id="sGame">
+    <div class="timer-row">
+      <div class="timer-num" id="timerDisp">2:00</div>
+      <div class="prog-track"><div class="prog-fill" id="progFill" style="width:100%;background:var(--gold);"></div></div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:var(--mono);" id="roundDisp"></div>
+    </div>
+
+    <div class="live-score">
+      <div class="ls-team blue">
+        <div class="ls-label blue">BLUE 🔵</div>
+        <div class="ls-pts blue" id="bluePts">0</div>
       </div>
-      <div class="progress-track"><div class="progress-fill" id="progFill" style="width:100%;background:var(--gold);"></div></div>
-      <div style="text-align:left;">
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:2px;">שחקנים</div>
-        <div style="font-family:var(--mono);font-size:18px;" id="aCount">0</div>
+      <div class="vs">VS</div>
+      <div class="ls-team red">
+        <div class="ls-label red">RED 🔴</div>
+        <div class="ls-pts red" id="redPts">0</div>
       </div>
     </div>
 
-    <div class="balance-bar">
-      <div class="balance-card"><div class="balance-label">מזומן</div><div class="balance-value" style="color:var(--gold)" id="cashDisp">₪1,000</div></div>
-      <div class="balance-card"><div class="balance-label">שווי תיק</div><div class="balance-value" id="portDisp">₪1,000</div></div>
-      <div class="balance-card"><div class="balance-label">רווח/הפסד</div><div class="balance-value" id="pnlDisp">₪0</div></div>
+    <div class="my-stats">
+      <div class="stat-box"><div class="stat-label">✓ נכון</div><div class="stat-val" id="myCorrect" style="color:var(--green);">0</div></div>
+      <div class="stat-box"><div class="stat-label">✗ טעות</div><div class="stat-val" id="myWrong" style="color:var(--red);">0</div></div>
+      <div class="stat-box"><div class="stat-label">⏱ פג זמן</div><div class="stat-val" id="myTimeout" style="color:rgba(255,255,255,.4);">0</div></div>
     </div>
 
-    <div class="trading-layout">
-      <div><div class="stocks-grid" id="stocksGrid"></div></div>
-      <div>
-        <div class="panel">
-          <div class="panel-title">תיק ומסחר</div>
-          <div id="portItems"><div style="font-size:13px;color:rgba(255,255,255,0.3);text-align:center;padding:18px;">לחץ על מניה לרכישה</div></div>
-          <div class="trade-controls" id="tradeCtrl" style="display:none;">
-            <div class="sel-name" id="selName">-</div>
-            <div class="sel-price" id="selPrice">-</div>
-            <div class="qty-row">
-              <button class="btn btn-outline" style="padding:9px 13px;" onclick="chgQty(-1)">-</button>
-              <input type="number" id="qtyInp" value="1" min="1" max="999"/>
-              <button class="btn btn-outline" style="padding:9px 13px;" onclick="chgQty(1)">+</button>
-            </div>
-            <div class="trade-btns">
-              <button class="btn btn-green" style="font-size:14px;" onclick="doTrade('buy')">קנה ✓</button>
-              <button class="btn btn-red" style="font-size:14px;" onclick="doTrade('sell')">מכור ✗</button>
-            </div>
-            <div class="trade-msg" id="tradeMsg"></div>
-          </div>
-        </div>
-        <div class="panel" style="margin-top:14px;">
-          <div class="panel-title">לוח מובילים</div>
-          <div id="lbDiv"></div>
-          <div id="adminResetArea"></div>
-        </div>
-        <div class="panel" style="margin-top:14px;">
-          <div class="panel-title">היסטוריית עסקאות</div>
-          <div id="tradeLogDiv" style="max-height:220px;overflow-y:auto;"></div>
-        </div>
-      </div>
+    <div class="q-card" id="qCard">
+      <div class="q-label">שאלה</div>
+      <div class="q-text" id="qText">?</div>
+      <div class="q-timer ok" id="qTimer">6 שניות</div>
+      <input class="ans-input" id="ansInput" type="number" placeholder="התשובה..." autocomplete="off"/>
+      <button class="submit-btn blue" id="submitBtn" onclick="submitAnswer()">שלח ✓</button>
+      <div class="feedback" id="feedback" style="display:none;"></div>
     </div>
   </div>
 
   <!-- RESULTS -->
   <div class="screen" id="sResult">
     <div class="result-wrap">
-      <div style="font-size:12px;color:var(--gold);font-family:var(--mono);letter-spacing:2px;margin-bottom:6px;">FINAL RESULTS</div>
-      <h2 style="font-size:30px;font-weight:900;margin-bottom:4px;">סיום מסחר!</h2>
-      <p style="color:rgba(255,255,255,0.4);margin-bottom:16px;">המנצחים של ה-Happy Hour</p>
-      <div class="podium" id="podium"></div>
-      <div class="full-lb" id="fullLb"></div>
-      <button class="btn btn-gold" style="margin-top:28px;" id="restartBtn">משחק חדש</button>
+      <div class="winner-banner" id="winnerBanner">
+        <div class="winner-emoji" id="winnerEmoji"></div>
+        <div class="winner-title" id="winnerTitle"></div>
+        <div class="winner-sub" id="winnerSub"></div>
+      </div>
+      <div class="final-score">
+        <div class="fs-card blue"><div class="fs-label blue">BLUE 🔵</div><div class="fs-pts blue" id="resBluePts">0</div></div>
+        <div class="fs-card red"><div class="fs-label red">RED 🔴</div><div class="fs-pts red" id="resRedPts">0</div></div>
+      </div>
+      <div id="adminRestartArea"></div>
     </div>
   </div>
-
-<!-- News popup -->
-<div id="newsOverlay" style="display:none;" class="news-overlay" onclick="closeNewsPopup(event)">
-  <div class="news-popup">
-    <div class="np-label">⚡ BREAKING NEWS</div>
-    <div class="np-text" id="npText"></div>
-    <div class="np-effect" id="npEffect"></div>
-    <div class="np-timer" id="npTimer"></div>
-    <button class="np-close" onclick="closeNewsPopup()">הבנתי ✓</button>
-  </div>
-</div>
 </div>
 
-<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, update, remove, serverTimestamp }
+import { getDatabase, ref, set, get, onValue, update, remove }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -287,544 +262,339 @@ const firebaseConfig = {
   appId: "1:770000973719:web:89505dcdfeab8d68549ed2"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const ROOM = "room1";
-const TOTAL = 600;
-const COMMISSION = 0.01;
-
-const STOCKS_DEF = [
-  {ticker:'TNUVA', name:'תנובה',   price:110},
-  {ticker:'ELITE', name:'עלית',    price:130},
-];
-
-const NEWS = [
-  /* תנובה — חיובי */
-  {text:'תנובה מכריזה: "החמאה חוזרת למדפים!" — התור בסופר כבר מגיע לרחוב',sentiment:'bullish',stock:'TNUVA',effect:.10},
-  {text:'תנובה מציגה קוטג\' דל שומן בטעם שוקולד — ישראלים נדהמים ורוכשים בהמוניהם',sentiment:'bullish',stock:'TNUVA',effect:.08},
-  {text:'תנובה זוכה בפרס המוצר הטעים של השנה — מחלבות המתחרים בוכות',sentiment:'bullish',stock:'TNUVA',effect:.09},
-  {text:'מחסור בחלב בעולם — תנובה היחידה שמייצרת. הביקוש מזנק',sentiment:'bullish',stock:'TNUVA',effect:.12},
-  {text:'תנובה מוסיפה 200 גרם לאריזת הגבינה הצהובה — ללא עלייה במחיר',sentiment:'bullish',stock:'TNUVA',effect:.07},
-  /* תנובה — שלילי */
-  {text:'סקנדל: נמצאה חבילת גבינה תנובה שפג תוקפה ב-2019. המניה בצלילה חופשית',sentiment:'bearish',stock:'TNUVA',effect:-.11},
-  {text:'תנובה מייקרת את הקוטג\' ב-15% — מחאת הקוטג\' 2.0 פורצת ברשתות',sentiment:'bearish',stock:'TNUVA',effect:-.10},
-  {text:'נזכר: תנובה מוצאת עכבר במפעל. הציבור עובר לגבינות יבוא',sentiment:'bearish',stock:'TNUVA',effect:-.13},
-  {text:'בצורת בצפון — הפרות לא מרוצות, ייצור החלב של תנובה יורד ב-30%',sentiment:'bearish',stock:'TNUVA',effect:-.09},
-  {text:'תנובה מקטינה את אריזת השמנת ב-50 מ"ל — הישראלים מזועזעים',sentiment:'bearish',stock:'TNUVA',effect:-.07},
-  /* עלית — חיובי */
-  {text:'עלית מכריזה: "הבמבה לא תייקר ב-2025!" — הציבור חוגג ברחובות תל אביב',sentiment:'bullish',stock:'ELITE',effect:.11},
-  {text:'מחקר חדש: במבה מונעת אלרגיות — הורים ברחבי העולם קונים בהמוניהם',sentiment:'bullish',stock:'ELITE',effect:.13},
-  {text:'עלית חותמת על עסקת ייצוא ענקית לסין — 500 מיליון שקיות במבה בדרך למזרח',sentiment:'bullish',stock:'ELITE',effect:.12},
-  {text:'טעם חדש של טבע-דקל — פיסטוק ומלח ים. הישראלים משתגעים',sentiment:'bullish',stock:'ELITE',effect:.08},
-  {text:'עלית מכריזה על שוקולד עם 0 קלוריות — מדענים מבולבלים, הציבור קונה',sentiment:'bullish',stock:'ELITE',effect:.10},
-  /* עלית — שלילי */
-  {text:'נמדד: כמות האוויר בשקית הבמבה עלתה שוב ב-8% — ויקי מדיה מתעדת',sentiment:'bearish',stock:'ELITE',effect:-.09},
-  {text:'עלית מייקרת את הפרה של שטראוס... רגע, זה המתחרה. בכל זאת, עלית יורדת',sentiment:'bearish',stock:'ELITE',effect:-.06},
-  {text:'מפעל עלית בנתניה עוצר ייצור — בעיה במכונת הציפוי. אספקת שוקולד בסכנה',sentiment:'bearish',stock:'ELITE',effect:-.11},
-  {text:'ילד בראיון טלוויזיה: "הבמבה פחות טעימה מפעם." ישראל בהלם. המניה יורדת',sentiment:'bearish',stock:'ELITE',effect:-.08},
-  {text:'עלית מפסידה מכרז לספק חטיפים לצבא — נייבר גנבה את העסקה',sentiment:'bearish',stock:'ELITE',effect:-.10},
-  /* כלליות שמשפיעות על שתיהן */
-  {text:'ממשלה מכריזה על סבסוד מזון — חברות מזון ישראליות מזנקות',sentiment:'bullish',stock:null,effect:.07},
-  {text:'חגי תשרי בפתח — כולם קונים מתנות אוכל. ביקוש שיא לחטיפים ומוצרי חלב',sentiment:'bullish',stock:null,effect:.08},
-  {text:'שביתה כללית מחר — הציבור ממהר לסופר ומרוקן מדפים. חברות מזון מרוויחות',sentiment:'bullish',stock:null,effect:.09},
-  {text:'ממשלה מטילה מע"מ נוסף על מוצרי מזון — הציבור מזועזע, מניות יורדות',sentiment:'bearish',stock:null,effect:-.08},
-  {text:'חמסין כבד השבוע — כולם בבית, אוכלים חטיפים ושותים חלב. ביקוש עולה',sentiment:'bullish',stock:null,effect:.06},
-  {text:'דוח: ישראלים אוכלים פחות — דיאטות לאחר החגים. מניות מזון בלחץ',sentiment:'bearish',stock:null,effect:-.07},
-];
-
-/* ── local state ── */
-let myName = '';
-let isAdmin = false;
-let selTicker = null;
-let myCash = 1000;
-let myPort = {};
-let gameStocks = STOCKS_DEF.map(s=>({...s,history:[s.price]}));
-let gamePhase = 'join';
-let secondsLeft = TOTAL;
-let timerInt = null;
-let priceInt = null;
-let newsInt = null;
-let allPlayers = {};
-let usedNews = [];
-let tradeLog = [];
-let shownNewsTs = 0;
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+const ROOM = "mathbattle1";
+const TOTAL_SECS = 120;
 
 /* ── refs ── */
 const rGame    = ()=>ref(db,`${ROOM}/game`);
-const rStocks  = ()=>ref(db,`${ROOM}/stocks`);
 const rPlayers = ()=>ref(db,`${ROOM}/players`);
-const rPlayer  = (n)=>ref(db,`${ROOM}/players/${n}`);
-const rNews    = ()=>ref(db,`${ROOM}/news`);
+const rPlayer  = n=>ref(db,`${ROOM}/players/${n}`);
+const rScore   = ()=>ref(db,`${ROOM}/score`);
+
+/* ── local state ── */
+let myName='', myTeam='', isAdmin=false;
+let myCorrect=0, myWrong=0, myTimeout=0;
+let qSecs=0, qInterval=null, timerInterval=null;
+let currentQ=null, answered=false;
+let gameSecsLeft=TOTAL_SECS;
+let allPlayers={};
+
+/* ── question generator ── */
+function genQuestion(){
+  const ops=['+','-','×'];
+  const op=ops[Math.floor(Math.random()*ops.length)];
+  let a,b,ans,text;
+  if(op==='×'){
+    a=Math.floor(Math.random()*9)+2;
+    b=Math.floor(Math.random()*9)+2;
+    ans=a*b; text=`${a} × ${b}`;
+  } else if(op==='+'){
+    a=Math.floor(Math.random()*50)+10;
+    b=Math.floor(Math.random()*50)+10;
+    ans=a+b; text=`${a} + ${b}`;
+  } else {
+    a=Math.floor(Math.random()*50)+20;
+    b=Math.floor(Math.random()*19)+1;
+    if(b>a)b=a-1;
+    ans=a-b; text=`${a} - ${b}`;
+  }
+  return {text:`${text} = ?`, ans};
+}
 
 /* ── helpers ── */
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
-function setPill(txt,cls){const p=document.getElementById('statusPill');p.textContent=txt;p.className='status-pill '+cls;}
+function setPill(t,c){const p=document.getElementById('statusPill');p.textContent=t;p.className='pill '+c;}
+function copyLink(){navigator.clipboard.writeText(location.href).then(()=>{document.getElementById('shareUrl').textContent='✓ הועתק!';setTimeout(()=>document.getElementById('shareUrl').textContent=location.href,1500);});}
 
-function copyLink(){
-  navigator.clipboard.writeText(location.href).then(()=>{
-    document.getElementById('shareUrl').textContent='✓ הועתק!';
-    setTimeout(()=>document.getElementById('shareUrl').textContent=location.href,1500);
-  });
+/* ── team pick ── */
+window.pickTeam = function(team){
+  myTeam=team;
+  document.getElementById('btnBlue').classList.toggle('sel',team==='blue');
+  document.getElementById('btnRed').classList.toggle('sel',team==='red');
+  checkJoinReady();
+};
+
+function checkJoinReady(){
+  const name=document.getElementById('nameInput').value.trim();
+  document.getElementById('joinBtn').disabled=!(name&&myTeam);
 }
+document.getElementById('nameInput').addEventListener('input',checkJoinReady);
+document.getElementById('nameInput').addEventListener('keypress',e=>{if(e.key==='Enter'&&!document.getElementById('joinBtn').disabled)joinGame();});
+document.getElementById('ansInput').addEventListener('keypress',e=>{if(e.key==='Enter')submitAnswer();});
 
 /* ── JOIN ── */
 window.joinGame = async function(){
-  const n = document.getElementById('nameInput').value.trim();
-  if(!n){alert('אנא הזן שם');return;}
-  myName=n; isAdmin=false;
-  const snap = await get(rGame());
-  const g = snap.val()||{};
-  if(g.phase==='ended'){loadResults();return;}
-  if(g.phase==='trading'){
-    await joinPlayer();
-    loadTradingState();
-    goTrading();
-    return;
-  }
-  await joinPlayer();
+  const n=document.getElementById('nameInput').value.trim();
+  if(!n||!myTeam)return;
+  myName=n;
+  const snap=await get(rGame());
+  const g=snap.val()||{};
+  if(g.phase==='playing'){await registerPlayer();startGameUI();return;}
+  if(g.phase==='ended'){goResult();return;}
+  await registerPlayer();
   goWaiting();
 };
 
 window.joinAsAdmin = async function(){
-  myName='מנהל_'+Math.floor(Math.random()*900+100);
-  isAdmin=true;
-  const snap = await get(rGame());
-  const g = snap.val()||{};
-  if(g.phase==='ended'){loadResults();return;}
-  if(g.phase==='trading'){loadTradingState();goTrading();return;}
+  myName='מנהל'; isAdmin=true; myTeam='blue';
+  const snap=await get(rGame());
+  const g=snap.val()||{};
+  if(g.phase==='playing'){startGameUI();return;}
+  if(g.phase==='ended'){goResult();return;}
   goWaiting();
 };
 
-async function joinPlayer(){
-  const snap = await get(rPlayer(myName));
+async function registerPlayer(){
+  const snap=await get(rPlayer(myName));
   if(!snap.exists()){
-    await set(rPlayer(myName),{cash:1000,portfolio:{},joined:Date.now()});
+    await set(rPlayer(myName),{team:myTeam,correct:0,wrong:0,timeout:0,joined:Date.now()});
   }
-  const p = (await get(rPlayer(myName))).val();
-  myCash = p.cash||1000;
-  myPort = p.portfolio||{};
 }
 
 /* ── WAITING ── */
 function goWaiting(){
-  show('sWait');setPill('ממתין לשחקנים','pill-wait');
-  document.getElementById('shareUrl').textContent = location.href;
-
+  show('sWait'); setPill('ממתין לשחקנים','pill-wait');
+  document.getElementById('shareUrl').textContent=location.href;
   if(isAdmin){
-    document.getElementById('adminStartArea').innerHTML=
-      `<button class="btn btn-green btn-full" onclick="startGame()">🚀 התחל מסחר</button>`;
+    document.getElementById('adminArea').innerHTML=
+      `<button class="btn btn-green" onclick="startGame()" id="startBtn">🚀 התחל משחק</button>
+       <button class="btn btn-outline" onclick="resetGame()" style="margin-top:8px;">🗑 אפס הכל</button>`;
   } else {
-    document.getElementById('adminStartArea').innerHTML='';
-    document.getElementById('waitMsg').textContent='ממתין למנהל שיתחיל את המשחק...';
+    document.getElementById('waitMsg').textContent='ממתין למנהל שיתחיל...';
   }
 
   onValue(rPlayers(), snap=>{
-    allPlayers = snap.val()||{};
-    const names = Object.keys(allPlayers);
-    document.getElementById('pCount').textContent = names.length;
-    document.getElementById('pChips').innerHTML = names.map(n=>
-      `<span class="player-chip"><span class="dot"></span>${n}</span>`
-    ).join('') || '<span style="color:rgba(255,255,255,0.3);font-size:13px;">אין שחקנים עדיין...</span>';
+    allPlayers=snap.val()||{};
+    refreshTeams();
   });
-
   onValue(rGame(), snap=>{
-    const g = snap.val()||{};
-    if(g.phase==='trading' && !isAdmin){loadTradingState();goTrading();}
-    if(g.phase==='ended'){loadResults();}
+    const g=snap.val()||{};
+    if(g.phase==='playing' && !isAdmin){startGameUI();}
+    if(g.phase==='ended'){goResult();}
   });
+}
+
+function refreshTeams(){
+  const blues=Object.entries(allPlayers).filter(([,p])=>p.team==='blue');
+  const reds =Object.entries(allPlayers).filter(([,p])=>p.team==='red');
+  document.getElementById('blueCount').textContent=blues.length;
+  document.getElementById('redCount').textContent=reds.length;
+  document.getElementById('bluePlayers').textContent=blues.map(([n])=>n).join(', ');
+  document.getElementById('redPlayers').textContent=reds.map(([n])=>n).join(', ');
+
+  const diff=Math.abs(blues.length-reds.length);
+  const warn=document.getElementById('balanceWarn');
+  const startBtn=document.getElementById('startBtn');
+  if(blues.length===0||reds.length===0){
+    warn.style.display='block';
+    warn.textContent='⚠ צריך שחקנים בשתי הקבוצות';
+    if(startBtn)startBtn.disabled=true;
+  } else if(diff>1){
+    warn.style.display='block';
+    warn.textContent=`⚠ הפרש של ${diff} שחקנים — המשחק יתחיל רק עם הפרש של 0 או 1`;
+    if(startBtn)startBtn.disabled=true;
+  } else {
+    warn.style.display='none';
+    if(startBtn)startBtn.disabled=false;
+  }
 }
 
 /* ── START ── */
 window.startGame = async function(){
-  const stocks = STOCKS_DEF.map(s=>({...s,history:[s.price]}));
-  await set(rStocks(), stocks);
-  await set(rNews(), {text:'',sentiment:'neutral',ts:0});
-  await set(rGame(),{phase:'trading',secondsLeft:TOTAL,startedAt:Date.now()});
-  loadTradingState();
-  goTrading();
+  await set(rScore(),{blue:0,red:0});
+  await set(rGame(),{phase:'playing',secsLeft:TOTAL_SECS,startedAt:Date.now()});
+  startGameUI();
 };
 
-/* ── TRADING ── */
-function loadTradingState(){
-  gameStocks = STOCKS_DEF.map(s=>({...s,history:[s.price]}));
-}
+/* ── GAME UI ── */
+function startGameUI(){
+  show('sGame'); setPill('משחק פעיל','pill-live');
 
-function goTrading(){
-  show('sTrade'); setPill('מסחר פעיל','pill-live');
+  /* my team color */
+  const myT = myTeam||'blue';
+  document.getElementById('submitBtn').className=`submit-btn ${myT}`;
 
-  /* listen stocks */
-  onValue(rStocks(), snap=>{
-    const arr = snap.val();
-    if(arr) gameStocks = arr;
-    renderStocks();updateBalance();updateLB();
+  /* listen score */
+  onValue(rScore(), snap=>{
+    const s=snap.val()||{blue:0,red:0};
+    document.getElementById('bluePts').textContent=s.blue;
+    document.getElementById('redPts').textContent=s.red;
   });
 
-  /* listen news — show big popup only once per event */
-  onValue(rNews(), snap=>{
-    const n = snap.val();
-    if(n && n.ts && n.ts !== shownNewsTs && Date.now()-n.ts < 15000){
-      shownNewsTs = n.ts;
-      showNewsPopup(n);
-    }
-  });
-
-  /* listen game (timer + phase) */
+  /* listen game timer (admin drives it) */
   onValue(rGame(), snap=>{
     const g=snap.val()||{};
-    gamePhase = g.phase;
-    secondsLeft = g.secondsLeft??TOTAL;
+    gameSecsLeft=g.secsLeft??TOTAL_SECS;
     updateTimerUI();
     if(g.phase==='ended'){
-      clearInterval(timerInt);clearInterval(priceInt);clearInterval(newsInt);
-      loadResults();
+      clearInterval(timerInterval);
+      goResult();
     }
   });
 
-  /* listen my player */
-  onValue(rPlayer(myName), snap=>{
-    if(snap.exists()){
-      const p=snap.val();
-      myCash=p.cash||myCash;
-      myPort=p.portfolio||myPort;
-      updateBalance();renderPort();
-    }
-  });
-
-  /* listen all players for LB */
-  tradeLog=[];
-  renderLog();
-  onValue(rPlayers(), snap=>{allPlayers=snap.val()||{};updateLB();});
-
+  /* admin drives the global timer */
   if(isAdmin){
-    document.getElementById('adminResetArea').innerHTML=
-      `<button class="btn btn-outline btn-full" style="font-size:13px;margin-top:12px;color:var(--red);border-color:rgba(255,23,68,0.3);" onclick="resetPlayers()">🗑 אפס שחקנים ומשחק חדש</button>`;
+    timerInterval=setInterval(async()=>{
+      const snap=await get(rGame());
+      const g=snap.val()||{};
+      if(g.phase!=='playing')return;
+      const left=(g.secsLeft??TOTAL_SECS)-1;
+      if(left<=0){
+        clearInterval(timerInterval);
+        await update(rGame(),{phase:'ended',secsLeft:0});
+        return;
+      }
+      await update(rGame(),{secsLeft:left});
+    },1000);
   }
 
-  /* admin: drive timer + prices + news */
-  if(isAdmin){
-    timerInt = setInterval(adminTick, 1000);
-    priceInt = setInterval(adminPrices, 3000);
-    scheduleNews();
-  }
+  nextQuestion();
 }
 
-let adminSecLeft = TOTAL;
-async function adminTick(){
-  const snap = await get(rGame());
-  const g = snap.val()||{};
-  if(g.phase!=='trading') return;
-  adminSecLeft = (g.secondsLeft??TOTAL) - 1;
-  if(adminSecLeft<=0){
-    clearInterval(timerInt);clearInterval(priceInt);clearInterval(newsInt);
-    await update(rGame(),{phase:'ended',secondsLeft:0});
-    return;
-  }
-  await update(rGame(),{secondsLeft:adminSecLeft});
-}
-
-async function adminPrices(){
-  const snap = await get(rStocks());
-  const stocks = snap.val();
-  if(!stocks) return;
-
-  const pSnap = await get(rPlayers());
-  const players = Object.values(pSnap.val()||{});
-  const numPlayers = Math.max(players.length, 1);
-
-  stocks.forEach(s=>{
-    /* כמה שחקנים מחזיקים לפחות מניה אחת */
-    const holders = players.filter(p => (p.portfolio?.[s.ticker]||0) > 0).length;
-    /* כמה שחקנים לא מחזיקים כלל */
-    const nonHolders = numPlayers - holders;
-
-    /* יחס: +1 = כולם מחזיקים, -1 = אף אחד לא מחזיק */
-    const ratio = (holders - nonHolders) / numPlayers;
-
-    /* תזוזה: עד ±2% לטיק לפי יחס ההחזקה
-       למשל 15/20 מחזיקים → ratio=0.5 → +1% לטיק
-       5/20 מחזיקים → ratio=-0.5 → -1% לטיק */
-    const move = ratio * 0.02;
-
-    s.price = Math.max(5, s.price * (1 + move));
-    if(!s.basePrice) s.basePrice = s.price;
-    if(!s.history) s.history=[];
-    s.history.push(s.price);
-    if(s.history.length>40) s.history.shift();
-  });
-
-  await set(rStocks(), stocks);
-}
-
-function scheduleNews(){
-  const delay = 55000+Math.random()*10000;
-  newsInt = setTimeout(async()=>{
-    if(gamePhase!=='trading')return;
-    const available = NEWS.filter(n=>!usedNews.includes(n.text));
-    if(!available.length)return;
-    const ev=available[Math.floor(Math.random()*available.length)];
-    usedNews.push(ev.text);
-
-    /* apply price effect */
-    const snap = await get(rStocks());
-    const stocks = snap.val();
-    if(stocks){
-      stocks.forEach(s=>{
-        if(!ev.stock || ev.stock===s.ticker){
-          s.price = Math.max(5, s.price*(1+ev.effect));
-          s.history = s.history||[];
-          s.history.push(s.price);
-          if(!s.basePrice) s.basePrice = s.price;
-        }
-      });
-      await set(rStocks(), stocks);
-    }
-    await set(rNews(),{text:ev.text,sentiment:ev.sentiment,effect:ev.effect,stock:ev.stock,ts:Date.now()});
-    scheduleNews();
-  }, delay);
-}
-
-/* ── UI RENDERS ── */
 function updateTimerUI(){
-  const m=Math.floor(secondsLeft/60), s=secondsLeft%60;
+  const m=Math.floor(gameSecsLeft/60), s=gameSecsLeft%60;
   document.getElementById('timerDisp').textContent=`${m}:${String(s).padStart(2,'0')}`;
-  const pct=(secondsLeft/TOTAL)*100;
+  const pct=(gameSecsLeft/TOTAL_SECS)*100;
   const fill=document.getElementById('progFill');
   fill.style.width=pct+'%';
   fill.style.background=pct>30?'var(--gold)':'var(--red)';
-  document.getElementById('aCount').textContent=Object.keys(allPlayers).length;
 }
 
-function renderStocks(){
-  const grid=document.getElementById('stocksGrid');
-  if(!gameStocks||!gameStocks.length)return;
-  grid.innerHTML=gameStocks.map(s=>{
-    const hist=s.history||[s.price];
-    const prev=hist.length>1?hist[hist.length-2]:s.price;
-    const chg=((s.price-prev)/prev)*100;
-    const isUp=chg>=0;
-    const sparkline=buildSpark(hist,isUp);
-    const myQty=myPort[s.ticker]||0;
-    const isSel=selTicker===s.ticker;
-    return `<div class="stock-card${isSel?' sel':''}" onclick="selStock('${s.ticker}')">
-      <div class="stock-header">
-        <div><div class="ticker">${s.ticker}</div><div class="sname">${s.name}</div></div>
-        ${myQty>0?`<span class="qty-badge">×${myQty}</span>`:''}
-      </div>
-      <div class="price">₪${s.price.toFixed(2)}</div>
-      <div class="chg ${isUp?'up':'down'}">${isUp?'▲':'▼'} ${(isUp?'+':'')}${chg.toFixed(2)}%</div>
-      <div class="mini-chart">${sparkline}</div>
-    </div>`;
-  }).join('');
+/* ── QUESTION ── */
+function nextQuestion(){
+  currentQ=genQuestion();
+  answered=false;
+  qSecs=6;
+
+  const card=document.getElementById('qCard');
+  card.className='q-card next-pulse';
+  setTimeout(()=>card.classList.remove('next-pulse'),600);
+
+  document.getElementById('qText').textContent=currentQ.text;
+  document.getElementById('ansInput').value='';
+  document.getElementById('ansInput').disabled=false;
+  document.getElementById('submitBtn').disabled=false;
+  document.getElementById('feedback').style.display='none';
+  updateQTimer();
+
+  if(qInterval)clearInterval(qInterval);
+  qInterval=setInterval(()=>{
+    qSecs--;
+    updateQTimer();
+    if(qSecs<=0){
+      clearInterval(qInterval);
+      handleTimeout();
+    }
+  },1000);
+
+  setTimeout(()=>document.getElementById('ansInput').focus(),100);
 }
 
-function buildSpark(hist,isUp){
-  if(!hist||hist.length<2)return '';
-  const color=isUp?'#00e676':'#ff1744';
-  const w=200,h=38;
-  const mn=Math.min(...hist),mx=Math.max(...hist),rng=mx-mn||1;
-  const pts=hist.map((v,i)=>{
-    const x=(i/(hist.length-1))*w;
-    const y=h-((v-mn)/rng)*(h-4)-2;
-    return `${x},${y}`;
-  }).join(' ');
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/></svg>`;
+function updateQTimer(){
+  const el=document.getElementById('qTimer');
+  el.textContent=`${qSecs} שניות`;
+  el.className=qSecs<=2?'q-timer urgent':'q-timer ok';
 }
 
-window.selStock = function(ticker){
-  selTicker=ticker;
-  const s=gameStocks.find(s=>s.ticker===ticker);
-  document.getElementById('selName').textContent=`${s.ticker} — ${s.name}`;
-  document.getElementById('selPrice').textContent=`₪${s.price.toFixed(2)} למניה`;
-  document.getElementById('tradeCtrl').style.display='block';
-  document.getElementById('tradeMsg').textContent='';
-  renderStocks();renderPort();
-};
+window.submitAnswer = function(){
+  if(answered)return;
+  const val=parseInt(document.getElementById('ansInput').value);
+  if(isNaN(val))return;
+  clearInterval(qInterval);
+  answered=true;
+  document.getElementById('ansInput').disabled=true;
+  document.getElementById('submitBtn').disabled=true;
 
-window.chgQty = function(d){
-  const inp=document.getElementById('qtyInp');
-  inp.value=Math.max(1,parseInt(inp.value||1)+d);
-};
-
-window.doTrade = async function(action){
-  if(!selTicker){return;}
-  const s=gameStocks.find(s=>s.ticker===selTicker);
-  const qty=parseInt(document.getElementById('qtyInp').value)||1;
-  const cost=s.price*qty;
-  const commission=Math.ceil(cost*COMMISSION);
-  const msg=document.getElementById('tradeMsg');
-
-  if(action==='buy'){
-    const total=cost+commission;
-    if(total>myCash){msg.style.color='var(--red)';msg.textContent=`אין מספיק מזומן! (כולל עמלה ₪${commission})`;return;}
-    myCash-=total;
-    myPort[s.ticker]=(myPort[s.ticker]||0)+qty;
-    msg.style.color='var(--green)';msg.textContent=`נרכשו ${qty} × ${s.ticker} | עמלה ₪${commission}`;
-    addLog('buy', s.ticker, qty, cost, commission);
+  const correct=(val===currentQ.ans);
+  if(correct){
+    myCorrect++;
+    showFeedback('correct','✓ נכון! +1 לקבוצה');
+    updateScore(myTeam,1);
+    update(rPlayer(myName),{correct:myCorrect});
   } else {
-    const have=myPort[s.ticker]||0;
-    if(have<qty){msg.style.color='var(--red)';msg.textContent='אין מספיק מניות!';return;}
-    const net=cost-commission;
-    myCash+=net;
-    myPort[s.ticker]=have-qty;
-    if(myPort[s.ticker]===0)delete myPort[s.ticker];
-    msg.style.color='var(--gold)';msg.textContent=`נמכרו ${qty} × ${s.ticker} | עמלה ₪${commission}`;
-    addLog('sell', s.ticker, qty, cost, commission);
+    myWrong++;
+    showFeedback('wrong',`✗ טעות! התשובה: ${currentQ.ans} | -1 לקבוצה`);
+    updateScore(myTeam,-1);
+    update(rPlayer(myName),{wrong:myWrong});
   }
-
-  /* write trade event for price engine */
-  const tradeKey = `${myName}_${Date.now()}`;
-  await update(ref(db,`${ROOM}/trades/${tradeKey}`),{
-    ticker: selTicker, action, qty, ts: Date.now()
-  });
-  await update(rPlayer(myName),{cash:myCash,portfolio:myPort});
-  updateBalance();renderPort();
+  document.getElementById('myCorrect').textContent=myCorrect;
+  document.getElementById('myWrong').textContent=myWrong;
+  setTimeout(nextQuestion,1800);
 };
 
-function addLog(action, ticker, qty, cost, commission){
-  const now=new Date();
-  const time=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-  tradeLog.unshift({action,ticker,qty,cost,commission,time});
-  if(tradeLog.length>50)tradeLog.pop();
-  renderLog();
+function handleTimeout(){
+  if(answered)return;
+  answered=true;
+  myTimeout++;
+  document.getElementById('ansInput').disabled=true;
+  document.getElementById('submitBtn').disabled=true;
+  showFeedback('timeout',`⏱ פג הזמן! התשובה: ${currentQ.ans}`);
+  document.getElementById('myTimeout').textContent=myTimeout;
+  update(rPlayer(myName),{timeout:myTimeout});
+  setTimeout(nextQuestion,1800);
 }
 
-function renderLog(){
-  const div=document.getElementById('tradeLogDiv');
-  if(!div)return;
-  if(!tradeLog.length){
-    div.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,0.3);text-align:center;padding:12px;">אין עסקאות עדיין</div>';
-    return;
-  }
-  div.innerHTML=tradeLog.map(e=>{
-    const isBuy=e.action==='buy';
-    const color=isBuy?'var(--green)':'var(--red)';
-    const arrow=isBuy?'▲ קנה':'▼ מכר';
-    const net=isBuy?-(e.cost+e.commission):e.cost-e.commission;
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;">
-      <div style="color:${color};font-family:var(--mono);min-width:54px;">${arrow}</div>
-      <div style="flex:1;padding:0 6px;">
-        <span style="color:var(--gold);font-family:var(--mono);">${e.ticker}</span>
-        <span style="color:rgba(255,255,255,0.45);"> ×${e.qty}</span>
-        <span style="font-size:10px;color:rgba(255,255,255,0.3);display:block;">עמלה ₪${e.commission}</span>
-      </div>
-      <div style="text-align:left;">
-        <div style="font-family:var(--mono);color:${net>=0?'var(--green)':'var(--red)'};">${net>=0?'+':''}₪${net.toFixed(0)}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.3);">${e.time}</div>
-      </div>
-    </div>`;
-  }).join('');
+function showFeedback(type,msg){
+  const fb=document.getElementById('feedback');
+  fb.className=`feedback ${type}`;
+  fb.textContent=msg;
+  fb.style.display='block';
+  document.getElementById('qCard').className=`q-card ${type}`;
 }
 
-function calcTotal(p){
-  let v=p.cash||0;
-  Object.entries(p.portfolio||{}).forEach(([ticker,qty])=>{
-    const s=gameStocks.find(s=>s.ticker===ticker);
-    if(s)v+=s.price*qty;
-  });
-  return v;
-}
-
-function updateBalance(){
-  const total=calcTotal({cash:myCash,portfolio:myPort});
-  const pnl=total-1000;
-  document.getElementById('cashDisp').textContent=`₪${myCash.toFixed(0)}`;
-  document.getElementById('portDisp').textContent=`₪${total.toFixed(0)}`;
-  const el=document.getElementById('pnlDisp');
-  el.textContent=(pnl>=0?'+':'')+'₪'+pnl.toFixed(0);
-  el.style.color=pnl>=0?'var(--green)':'var(--red)';
-}
-
-function renderPort(){
-  const items=Object.entries(myPort).filter(([,q])=>q>0);
-  const c=document.getElementById('portItems');
-  if(!items.length){c.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,0.3);text-align:center;padding:14px;">אין מניות בתיק</div>';return;}
-  c.innerHTML=items.map(([ticker,qty])=>{
-    const s=gameStocks.find(s=>s.ticker===ticker);
-    const val=s?s.price*qty:0;
-    return `<div class="portfolio-item">
-      <div><span style="font-family:var(--mono);font-size:13px;color:var(--gold);">${ticker}</span><br><span style="font-size:11px;color:rgba(255,255,255,0.4);">×${qty}</span></div>
-      <div style="font-family:var(--mono);font-size:13px;">₪${val.toFixed(0)}</div>
-    </div>`;
-  }).join('');
-}
-
-function updateLB(){
-  const ranked=Object.entries(allPlayers).map(([name,p])=>({name,total:calcTotal(p)})).sort((a,b)=>b.total-a.total);
-  const medals=['r-gold','r-silver','r-bronze'];
-  document.getElementById('lbDiv').innerHTML=ranked.slice(0,10).map((p,i)=>{
-    const isMe=p.name===myName;
-    return `<div class="lb-row${isMe?' lb-me':''}">
-      <div class="lb-rank ${medals[i]||''}">${i+1}</div>
-      <div style="flex:1;${isMe?'font-weight:700;':''}">${p.name}${isMe?' ★':''}</div>
-      <div style="font-family:var(--mono);font-size:13px;color:${p.total>=1000?'var(--green)':'var(--red)'}">₪${p.total.toFixed(0)}</div>
-    </div>`;
-  }).join('');
+async function updateScore(team,delta){
+  const snap=await get(rScore());
+  const s=snap.val()||{blue:0,red:0};
+  s[team]=Math.max(0,(s[team]||0)+delta);
+  await set(rScore(),s);
 }
 
 /* ── RESULTS ── */
-function loadResults(){
-  show('sResult');setPill('המשחק הסתיים','pill-end');
+function goResult(){
+  if(qInterval)clearInterval(qInterval);
+  if(timerInterval)clearInterval(timerInterval);
+  show('sResult'); setPill('המשחק הסתיים','pill-end');
 
-  onValue(rPlayers(), snap=>{
-    const players=snap.val()||{};
-    const ranked=Object.entries(players).map(([name,p])=>({name,total:calcTotal(p)})).sort((a,b)=>b.total-a.total);
+  onValue(rScore(), snap=>{
+    const s=snap.val()||{blue:0,red:0};
+    document.getElementById('resBluePts').textContent=s.blue;
+    document.getElementById('resRedPts').textContent=s.red;
 
-    const cfg=[{cls:'p-second',medal:'🥈',i:1},{cls:'p-first',medal:'🥇',i:0},{cls:'p-third',medal:'🥉',i:2}];
-    document.getElementById('podium').innerHTML=cfg.filter(c=>ranked[c.i]).map(c=>{
-      const p=ranked[c.i];
-      return `<div class="p-place ${c.cls}"><div class="p-medal">${c.medal}</div><div class="p-name">${p.name}</div><div class="p-val">₪${p.total.toFixed(0)}</div></div>`;
-    }).join('');
+    const banner=document.getElementById('winnerBanner');
+    const emoji=document.getElementById('winnerEmoji');
+    const title=document.getElementById('winnerTitle');
+    const sub=document.getElementById('winnerSub');
 
-    document.getElementById('fullLb').innerHTML=ranked.slice(3).map((p,i)=>
-      `<div class="lb-row"><div class="lb-rank">${i+4}</div><div style="flex:1">${p.name}</div><div style="font-family:var(--mono);font-size:13px;">₪${p.total.toFixed(0)}</div></div>`
-    ).join('');
+    if(s.blue>s.red){
+      banner.className='winner-banner blue';
+      emoji.textContent='🔵🏆';
+      title.textContent='קבוצה כחולה ניצחה!';
+      sub.textContent=`${s.blue} נקודות מול ${s.red}`;
+    } else if(s.red>s.blue){
+      banner.className='winner-banner red';
+      emoji.textContent='🔴🏆';
+      title.textContent='קבוצה אדומה ניצחה!';
+      sub.textContent=`${s.red} נקודות מול ${s.blue}`;
+    } else {
+      banner.className='winner-banner tie';
+      emoji.textContent='🤝';
+      title.textContent='תיקו!';
+      sub.textContent=`${s.blue} נקודות לכל קבוצה`;
+    }
   });
 
-  document.getElementById('restartBtn').onclick = async ()=>{
-    await remove(ref(db,ROOM));
-    location.reload();
-  };
+  if(isAdmin){
+    document.getElementById('adminRestartArea').innerHTML=
+      `<button class="btn btn-gold" onclick="resetGame()" style="margin-top:8px;">🔄 משחק חדש</button>`;
+  }
 }
 
-/* ── NEWS POPUP ── */
-let popupTimer = null;
-function showNewsPopup(n){
-  const overlay = document.getElementById('newsOverlay');
-  const txt = document.getElementById('npText');
-  const eff = document.getElementById('npEffect');
-  const timer = document.getElementById('npTimer');
-  if(!overlay) return;
-
-  txt.textContent = n.text;
-  const isUp = n.effect > 0;
-  const affected = n.stock || 'כל המניות';
-  eff.style.color = isUp ? 'var(--green)' : 'var(--red)';
-  eff.textContent = (isUp ? '▲ ' : '▼ ') + affected + ' ' + (isUp ? 'עולה' : 'יורדת');
-  overlay.style.display = 'flex';
-
-  let secs = 10;
-  timer.textContent = `נסגר אוטומטית בעוד ${secs} שניות`;
-  if(popupTimer) clearInterval(popupTimer);
-  popupTimer = setInterval(()=>{
-    secs--;
-    if(secs <= 0){ clearInterval(popupTimer); closeNewsPopup(); return; }
-    timer.textContent = `נסגר אוטומטית בעוד ${secs} שניות`;
-  }, 1000);
-}
-
-window.closeNewsPopup = function(e){
-  if(e && e.target !== document.getElementById('newsOverlay')) return;
-  if(popupTimer) clearInterval(popupTimer);
-  const overlay = document.getElementById('newsOverlay');
-  if(overlay) overlay.style.display = 'none';
-  /* mark current ts as seen so listener won't re-show */
-  shownNewsTs = Date.now();
-};
-
-/* ── RESET PLAYERS ── */
-window.resetPlayers = async function(){
-  if(!confirm('לאפס את כל השחקנים ולהתחיל מחדש?'))return;
-  clearInterval(timerInt);clearInterval(priceInt);clearInterval(newsInt);
+window.resetGame = async function(){
+  if(!confirm('לאפס את המשחק?'))return;
+  if(qInterval)clearInterval(qInterval);
+  if(timerInterval)clearInterval(timerInterval);
   await remove(ref(db,ROOM));
   location.reload();
 };
@@ -835,12 +605,8 @@ async function init(){
   document.getElementById('app').style.display='block';
   const snap=await get(rGame());
   const g=snap.val()||{};
-  if(g.phase==='trading'||g.phase==='ended'){
-    document.getElementById('nameInput').placeholder='השם שלך...';
-  }
+  if(g.phase==='playing')document.getElementById('nameInput').placeholder='המשחק כבר פעיל...';
 }
-
-document.getElementById('nameInput').addEventListener('keypress',e=>{if(e.key==='Enter')window.joinGame();});
 init();
 </script>
 </body>
