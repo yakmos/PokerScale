@@ -232,6 +232,10 @@ html,body{min-height:100vh;background:var(--bg);color:#e8eaf0;font-family:'Heebo
           <div id="lbDiv"></div>
           <div id="adminResetArea"></div>
         </div>
+        <div class="panel" style="margin-top:14px;">
+          <div class="panel-title">היסטוריית עסקאות</div>
+          <div id="tradeLogDiv" style="max-height:220px;overflow-y:auto;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -269,6 +273,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const ROOM = "room1";
 const TOTAL = 600;
+const COMMISSION = 0.01;
 
 const STOCKS_DEF = [
   {ticker:'TNUVA', name:'תנובה',   price:110},
@@ -319,6 +324,7 @@ let priceInt = null;
 let newsInt = null;
 let allPlayers = {};
 let usedNews = [];
+let tradeLog = [];
 
 /* ── refs ── */
 const rGame    = ()=>ref(db,`${ROOM}/game`);
@@ -465,6 +471,8 @@ function goTrading(){
   });
 
   /* listen all players for LB */
+  tradeLog=[];
+  renderLog();
   onValue(rPlayers(), snap=>{allPlayers=snap.val()||{};updateLB();});
 
   if(isAdmin){
@@ -608,25 +616,65 @@ window.doTrade = async function(action){
   const s=gameStocks.find(s=>s.ticker===selTicker);
   const qty=parseInt(document.getElementById('qtyInp').value)||1;
   const cost=s.price*qty;
+  const commission=Math.ceil(cost*COMMISSION);
   const msg=document.getElementById('tradeMsg');
 
   if(action==='buy'){
-    if(cost>myCash){msg.style.color='var(--red)';msg.textContent='אין מספיק מזומן!';return;}
-    myCash-=cost;
+    const total=cost+commission;
+    if(total>myCash){msg.style.color='var(--red)';msg.textContent=`אין מספיק מזומן! (כולל עמלה ₪${commission})`;return;}
+    myCash-=total;
     myPort[s.ticker]=(myPort[s.ticker]||0)+qty;
-    msg.style.color='var(--green)';msg.textContent=`נרכשו ${qty} מניות ב-₪${cost.toFixed(0)}`;
+    msg.style.color='var(--green)';msg.textContent=`נרכשו ${qty} × ${s.ticker} | עמלה ₪${commission}`;
+    addLog('buy', s.ticker, qty, cost, commission);
   } else {
     const have=myPort[s.ticker]||0;
     if(have<qty){msg.style.color='var(--red)';msg.textContent='אין מספיק מניות!';return;}
-    myCash+=cost;
+    const net=cost-commission;
+    myCash+=net;
     myPort[s.ticker]=have-qty;
     if(myPort[s.ticker]===0)delete myPort[s.ticker];
-    msg.style.color='var(--gold)';msg.textContent=`נמכרו ${qty} מניות ב-₪${cost.toFixed(0)}`;
+    msg.style.color='var(--gold)';msg.textContent=`נמכרו ${qty} × ${s.ticker} | עמלה ₪${commission}`;
+    addLog('sell', s.ticker, qty, cost, commission);
   }
 
   await update(rPlayer(myName),{cash:myCash,portfolio:myPort});
   updateBalance();renderPort();
 };
+
+function addLog(action, ticker, qty, cost, commission){
+  const now=new Date();
+  const time=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  tradeLog.unshift({action,ticker,qty,cost,commission,time});
+  if(tradeLog.length>50)tradeLog.pop();
+  renderLog();
+}
+
+function renderLog(){
+  const div=document.getElementById('tradeLogDiv');
+  if(!div)return;
+  if(!tradeLog.length){
+    div.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,0.3);text-align:center;padding:12px;">אין עסקאות עדיין</div>';
+    return;
+  }
+  div.innerHTML=tradeLog.map(e=>{
+    const isBuy=e.action==='buy';
+    const color=isBuy?'var(--green)':'var(--red)';
+    const arrow=isBuy?'▲ קנה':'▼ מכר';
+    const net=isBuy?-(e.cost+e.commission):e.cost-e.commission;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <div style="color:${color};font-family:var(--mono);min-width:54px;">${arrow}</div>
+      <div style="flex:1;padding:0 6px;">
+        <span style="color:var(--gold);font-family:var(--mono);">${e.ticker}</span>
+        <span style="color:rgba(255,255,255,0.45);"> ×${e.qty}</span>
+        <span style="font-size:10px;color:rgba(255,255,255,0.3);display:block;">עמלה ₪${e.commission}</span>
+      </div>
+      <div style="text-align:left;">
+        <div style="font-family:var(--mono);color:${net>=0?'var(--green)':'var(--red)'};">${net>=0?'+':''}₪${net.toFixed(0)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);">${e.time}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
 
 function calcTotal(p){
   let v=p.cash||0;
