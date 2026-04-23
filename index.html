@@ -277,7 +277,7 @@ function buildSessions(players) {
             byPlayer[e.playerName].invested  += (e.invested || 0);
             byPlayer[e.playerName].cashedOut += (e.cashedOut || 0);
             byPlayer[e.playerName].profit    += (e.profit || 0);
-            byPlayer[e.playerName].cashouts.push({ profit: e.profit, invested: e.invested, cashedOut: e.cashedOut, timestamp: e.timestamp });
+            byPlayer[e.playerName].cashouts.push({ profit: e.profit, invested: e.invested, cashedOut: e.cashedOut, timestamp: e.timestamp, rebuys: e.rebuys || 0, rebuyLog: e.rebuyLog || [] });
         }
         const players = Object.values(byPlayer);
         const totalPot = players.reduce((s, p) => s + p.invested, 0);
@@ -710,18 +710,21 @@ function renderSessions(isAdmin) {
             const profitCls = sp.profit >= 0 ? 'positive' : 'negative';
             // rebuy log מהcashout
             const rebuyLogs = sp.cashouts.flatMap(c => c.rebuyLog || []);
-            const rebuyTagsHtml = rebuyLogs.length > 0
-                ? rebuyLogs.map(r => `<span class="rebuy-tag">₪${r.amount} ${r.timestamp ? formatTime(r.timestamp) : ''}</span>`).join(' ')
-                : '';
             const rebuyCount = sp.cashouts.reduce((s,c) => s + (c.rebuys || 0), 0);
+            // אם יש rebuyLog מפורט — מציג עם שעות. אחרת רק כמות
+            let rebuyHtml = '';
+            if (rebuyLogs.length > 0) {
+                rebuyHtml = rebuyLogs.map(r => `<span class="rebuy-tag">+₪${r.amount}${r.timestamp ? ' ' + formatTime(r.timestamp) : ''}</span>`).join(' ');
+            } else if (rebuyCount > 0) {
+                rebuyHtml = `<span class="rebuy-tag">×${rebuyCount} ריביי</span>`;
+            }
 
             return `<div class="session-player-row">
                 <div>
                     <div class="session-player-name">${sp.name}</div>
                     <div class="session-player-detail">
                         השקיע: ₪${sp.invested} | פדה: ₪${sp.cashedOut}<br>
-                        ${rebuyCount > 0 ? `ריביי ×${rebuyCount}` : 'ללא ריביי'}
-                        ${rebuyTagsHtml ? '<br>' + rebuyTagsHtml : ''}
+                        ${rebuyHtml || 'ללא ריביי'}
                     </div>
                 </div>
                 <div class="session-profit ${profitCls}">
