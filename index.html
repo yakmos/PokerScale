@@ -101,12 +101,45 @@
     </style>
 </head>
 <body id="mainBody">
-<div class="container">
+
+<!-- ══ מסך כניסה / יצירת קבוצה ══ -->
+<div id="lobbyScreen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;">
+  <div style="width:100%;max-width:420px;">
+    <!-- לוגו -->
+    <div style="text-align:center;margin-bottom:36px;">
+      <div style="font-size:2.8rem;margin-bottom:8px;">🃏</div>
+      <h1 style="font-family:'Rubik',sans-serif;font-weight:900;font-size:2rem;background:var(--gold-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-transform:uppercase;letter-spacing:2px;">Poker Tracker</h1>
+      <p style="color:#888;font-size:0.85rem;margin-top:6px;">נהל את קבוצת הפוקר שלך</p>
+    </div>
+
+    <!-- כניסה לקבוצה קיימת -->
+    <div style="background:var(--card-bg);border-radius:20px;padding:24px;margin-bottom:16px;border:1px solid rgba(212,175,55,0.2);">
+      <h3 style="color:var(--casino-gold);margin-bottom:16px;font-size:1rem;">🔑 כניסה לקבוצה קיימת</h3>
+      <input type="text" id="joinCode" class="form-input" placeholder="קוד קבוצה (למשל: YAKIR)" style="text-transform:uppercase;letter-spacing:2px;">
+      <button class="btn-gold" style="width:100%;padding:14px;" onclick="window.joinGroup()">כנס לקבוצה ←</button>
+    </div>
+
+    <!-- יצירת קבוצה חדשה -->
+    <div style="background:var(--card-bg);border-radius:20px;padding:24px;border:1px solid rgba(255,255,255,0.05);">
+      <h3 style="color:#aaa;margin-bottom:16px;font-size:1rem;">✨ צור קבוצה חדשה</h3>
+      <input type="text" id="newGroupCode" class="form-input" placeholder="קוד קבוצה (אנגלית/מספרים)" style="text-transform:uppercase;letter-spacing:2px;">
+      <input type="password" id="newGroupPass" class="form-input" placeholder="סיסמת מנהל">
+      <button class="btn-dark" style="width:100%;padding:14px;background:rgba(212,175,55,0.1);border-color:rgba(212,175,55,0.3);color:var(--casino-gold);" onclick="window.createGroup()">צור קבוצה +</button>
+    </div>
+
+    <p id="lobbyError" style="color:var(--poker-red);text-align:center;margin-top:16px;font-size:0.9rem;min-height:20px;"></p>
+  </div>
+</div>
+
+<!-- ══ מסך האפליקציה הראשי ══ -->
+<div id="appScreen" style="display:none;">
     <header>
         <h1>Poker Tracker</h1>
+        <div id="groupNameDisplay" style="font-size:0.8rem;color:#888;margin-top:3px;letter-spacing:2px;"></div>
         <div class="admin-toolbar">
             <button class="btn-outline-gold" onclick="window.promptAdmin()">כניסת מנהל 🔒</button>
             <button class="btn-outline-gold admin-only" onclick="window.logoutAdmin()">התנתק 🔓</button>
+            <button class="btn-outline-gold" style="font-size:0.75rem;padding:4px 12px;color:#666;border-color:#333;" onclick="window.leaveGroup()">← החלף קבוצה</button>
         </div>
     </header>
 
@@ -195,7 +228,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, set, get, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB2TjONw7Kb3WY65qQZjZ5w6fZjkhVl2_g",
@@ -209,14 +242,107 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const dbRef = ref(db, 'poker_v2');
+
+// ── מצב קבוצה ──
+let currentGroupCode = null;   // קוד הקבוצה הפעיל
+let groupAdminPass = null;     // הסיסמה של המנהל (נטען מ-Firebase)
+let dbRef = null;              // ה-ref הפעיל
+let currentListener = null;   // ה-onValue listener הפעיל
 
 window.players = [];
 window.physicalCash = 0;
-
 let currentId = null;
 let myChart = null;
-const SESSION_GAP_MS = 12 * 60 * 60 * 1000; // 12 שעות
+const SESSION_GAP_MS = 12 * 60 * 60 * 1000;
+
+// ══════════════════════════════════════════
+// לוגיקת קבוצות
+// ══════════════════════════════════════════
+
+// קבוצת יקיר הקיימת ממופה ל-poker_v2 לשמירת נתונים
+function getDbPath(code) {
+    if (code.toUpperCase() === 'YAKIR') return 'poker_v2';
+    return 'groups/' + code.toUpperCase();
+}
+
+window.joinGroup = async () => {
+    const code = document.getElementById('joinCode').value.trim().toUpperCase();
+    if (!code) { showLobbyError('נא להזין קוד קבוצה'); return; }
+    showLobbyError('בודק...');
+    try {
+        const snap = await get(ref(db, getDbPath(code)));
+        if (!snap.exists()) { showLobbyError('קבוצה לא נמצאה. בדוק את הקוד.'); return; }
+        enterApp(code, snap.val().adminPassword || null);
+    } catch(e) { showLobbyError('שגיאת חיבור. נסה שוב.'); }
+};
+
+window.createGroup = async () => {
+    const code = document.getElementById('newGroupCode').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+    const pass = document.getElementById('newGroupPass').value.trim();
+    if (!code || code.length < 2) { showLobbyError('קוד חייב להכיל לפחות 2 תווים באנגלית'); return; }
+    if (!pass || pass.length < 3) { showLobbyError('סיסמה חייבת להכיל לפחות 3 תווים'); return; }
+    if (code === 'YAKIR') { showLobbyError('קוד זה שמור'); return; }
+    showLobbyError('יוצר קבוצה...');
+    try {
+        const path = getDbPath(code);
+        const snap = await get(ref(db, path));
+        if (snap.exists()) { showLobbyError('קוד זה תפוס, בחר קוד אחר'); return; }
+        await set(ref(db, path), { adminPassword: pass, players: [], physicalCash: 0 });
+        enterApp(code, pass);
+    } catch(e) { showLobbyError('שגיאת חיבור. נסה שוב.'); }
+};
+
+function enterApp(code, adminPass) {
+    currentGroupCode = code;
+    groupAdminPass = adminPass;
+    // שמירה ב-sessionStorage כדי שלא יצטרכו להזין שוב בריענון
+    sessionStorage.setItem('pokerGroup', code);
+
+    // הפעלת ה-listener
+    if (currentListener && dbRef) off(dbRef);
+    dbRef = ref(db, getDbPath(code));
+    currentListener = onValue(dbRef, (snap) => {
+        const data = snap.val() || {};
+        window.players = data.players || [];
+        window.physicalCash = data.physicalCash || 0;
+        groupAdminPass = data.adminPassword || groupAdminPass;
+        render();
+        if (!window._scaleHandled) handleBatchFromUrl();
+    });
+
+    // עדכון UI
+    document.getElementById('lobbyScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    document.getElementById('groupNameDisplay').innerText = '📍 ' + code;
+    document.getElementById('mainBody').classList.remove('is-admin');
+}
+
+window.leaveGroup = () => {
+    if (!confirm('לצאת מהקבוצה ולחזור למסך הבחירה?')) return;
+    if (currentListener && dbRef) off(dbRef);
+    currentGroupCode = null;
+    sessionStorage.removeItem('pokerGroup');
+    document.getElementById('mainBody').classList.remove('is-admin');
+    document.getElementById('appScreen').style.display = 'none';
+    document.getElementById('lobbyScreen').style.display = 'flex';
+    document.getElementById('joinCode').value = '';
+    showLobbyError('');
+};
+
+function showLobbyError(msg) {
+    document.getElementById('lobbyError').innerText = msg;
+}
+
+// ── Enter on input ──
+document.getElementById('joinCode').addEventListener('keydown', e => { if(e.key==='Enter') window.joinGroup(); });
+document.getElementById('newGroupPass').addEventListener('keydown', e => { if(e.key==='Enter') window.createGroup(); });
+
+// ── Auto-restore session ──
+const savedGroup = sessionStorage.getItem('pokerGroup');
+if (savedGroup) {
+    document.getElementById('joinCode').value = savedGroup;
+    window.joinGroup();
+}
 
 // ── Card Parser ──
 const parseCard = (str) => {
@@ -287,7 +413,15 @@ function buildSessions(players) {
 }
 
 // ── Admin ──
-window.promptAdmin = () => { if(prompt("סיסמה:") === "1946") { document.getElementById('mainBody').classList.add('is-admin'); render(); } };
+window.promptAdmin = () => {
+    const pwd = prompt("סיסמת מנהל:");
+    if (pwd && pwd === groupAdminPass) {
+        document.getElementById('mainBody').classList.add('is-admin');
+        render();
+    } else if (pwd !== null) {
+        alert("סיסמה שגויה");
+    }
+};
 window.logoutAdmin = () => { document.getElementById('mainBody').classList.remove('is-admin'); render(); };
 window.switchTab = (btn, sectionId) => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -560,16 +694,9 @@ window.openPlayerChart = (id) => {
 
 window.closeModal = () => document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
 
-// ── Firebase ──
-onValue(dbRef, (snap) => {
-    const data = snap.val() || {};
-    window.players = data.players || [];
-    window.physicalCash = data.physicalCash || 0;
-    render();
-    if (!window._scaleHandled) handleBatchFromUrl();
-});
+// ── Firebase Sync מופעל ב-enterApp ──
 
-async function save() { await set(dbRef, { players: window.players, physicalCash: window.physicalCash }); }
+async function save() { await set(dbRef, { adminPassword: groupAdminPass, players: window.players, physicalCash: window.physicalCash }); }
 
 // ── Batch from scale ──
 function handleBatchFromUrl() {
@@ -583,7 +710,7 @@ function handleBatchFromUrl() {
     const isAdmin = document.getElementById('mainBody').classList.contains('is-admin');
     if (!isAdmin) {
         const pwd = prompt("כניסת מנהל נדרשת\nסיסמה:");
-        if (pwd === "1946") { document.getElementById('mainBody').classList.add('is-admin'); render(); }
+        if (pwd === groupAdminPass) { document.getElementById('mainBody').classList.add('is-admin'); render(); }
         else { alert("סיסמה שגויה"); return; }
     }
     const entries = batchParam.split(',').map(s => { const parts = s.trim().split(':'); return { name: decodeURIComponent(parts[0]||'').trim(), amount: parseInt(parts[1])||0 }; }).filter(e => e.name && e.amount > 0);
