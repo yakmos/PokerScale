@@ -116,6 +116,7 @@
     <div style="background:var(--card-bg);border-radius:20px;padding:24px;margin-bottom:16px;border:1px solid rgba(212,175,55,0.2);">
       <h3 style="color:var(--casino-gold);margin-bottom:16px;font-size:1rem;">🔑 כניסה לקבוצה קיימת</h3>
       <input type="text" id="joinCode" class="form-input" placeholder="קוד קבוצה (למשל: YAKIR)" style="text-transform:uppercase;letter-spacing:2px;">
+      <input type="password" id="joinPass" class="form-input" placeholder="סיסמה (מנהל או משתמש)">
       <button class="btn-gold" style="width:100%;padding:14px;" onclick="window.joinGroup()">כנס לקבוצה ←</button>
     </div>
 
@@ -124,6 +125,7 @@
       <h3 style="color:#aaa;margin-bottom:16px;font-size:1rem;">✨ צור קבוצה חדשה</h3>
       <input type="text" id="newGroupCode" class="form-input" placeholder="קוד קבוצה (אנגלית/מספרים)" style="text-transform:uppercase;letter-spacing:2px;">
       <input type="password" id="newGroupPass" class="form-input" placeholder="סיסמת מנהל">
+      <input type="password" id="newGroupViewPass" class="form-input" placeholder="סיסמת צפייה (לחברים)">
       <button class="btn-dark" style="width:100%;padding:14px;background:rgba(212,175,55,0.1);border-color:rgba(212,175,55,0.3);color:var(--casino-gold);" onclick="window.createGroup()">צור קבוצה +</button>
     </div>
 
@@ -267,37 +269,53 @@ function getDbPath(code) {
 
 window.joinGroup = async () => {
     const code = document.getElementById('joinCode').value.trim().toUpperCase();
+    const pass = document.getElementById('joinPass').value.trim();
     if (!code) { showLobbyError('נא להזין קוד קבוצה'); return; }
+    if (!pass) { showLobbyError('נא להזין סיסמה'); return; }
     showLobbyError('בודק...');
     try {
         const snap = await get(ref(db, getDbPath(code)));
         if (!snap.exists()) { showLobbyError('קבוצה לא נמצאה. בדוק את הקוד.'); return; }
-    // קבוצת YAKIR — ברירת מחדל 1946 אם adminPassword לא שמור ב-Firebase
-    enterApp(code, snap.val().adminPassword || (code === 'YAKIR' ? '1946' : null));
+        const data = snap.val();
+        const adminPass = data.adminPassword || (code === 'YAKIR' ? '1946' : null);
+        const viewPass  = data.viewPassword  || (code === 'YAKIR' ? '1946' : null);
+        if (pass === adminPass) {
+            enterApp(code, adminPass, viewPass, true);   // מנהל
+        } else if (viewPass && pass === viewPass) {
+            enterApp(code, adminPass, viewPass, false);  // צפייה בלבד
+        } else {
+            showLobbyError('סיסמה שגויה');
+        }
     } catch(e) { showLobbyError('שגיאת חיבור. נסה שוב.'); }
 };
 
 window.createGroup = async () => {
     const code = document.getElementById('newGroupCode').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
     const pass = document.getElementById('newGroupPass').value.trim();
+    const viewPass = document.getElementById('newGroupViewPass').value.trim();
     if (!code || code.length < 2) { showLobbyError('קוד חייב להכיל לפחות 2 תווים באנגלית'); return; }
-    if (!pass || pass.length < 3) { showLobbyError('סיסמה חייבת להכיל לפחות 3 תווים'); return; }
+    if (!pass || pass.length < 3) { showLobbyError('סיסמת מנהל חייבת להכיל לפחות 3 תווים'); return; }
+    if (!viewPass || viewPass.length < 3) { showLobbyError('סיסמת צפייה חייבת להכיל לפחות 3 תווים'); return; }
+    if (pass === viewPass) { showLobbyError('סיסמת מנהל וסיסמת צפייה חייבות להיות שונות'); return; }
     if (code === 'YAKIR') { showLobbyError('קוד זה שמור'); return; }
     showLobbyError('יוצר קבוצה...');
     try {
         const path = getDbPath(code);
         const snap = await get(ref(db, path));
         if (snap.exists()) { showLobbyError('קוד זה תפוס, בחר קוד אחר'); return; }
-        await set(ref(db, path), { adminPassword: pass, players: [], physicalCash: 0 });
-        enterApp(code, pass);
+        await set(ref(db, path), { adminPassword: pass, viewPassword: viewPass, players: [], physicalCash: 0 });
+        enterApp(code, pass, viewPass, true);
     } catch(e) { showLobbyError('שגיאת חיבור. נסה שוב.'); }
 };
 
-function enterApp(code, adminPass) {
+// isAdmin = האם הנכנס הוא מנהל
+function enterApp(code, adminPass, viewPass, isAdmin) {
     currentGroupCode = code;
     groupAdminPass = adminPass;
-    // שמירה ב-sessionStorage כדי שלא יצטרכו להזין שוב בריענון
+
+    // שמירה ב-sessionStorage — שמירת סוג הכניסה
     sessionStorage.setItem('pokerGroup', code);
+    sessionStorage.setItem('pokerPass', isAdmin ? adminPass : viewPass);
 
     // הפעלת ה-listener
     if (currentListener && dbRef) off(dbRef);
@@ -314,8 +332,9 @@ function enterApp(code, adminPass) {
     // עדכון UI
     document.getElementById('lobbyScreen').style.display = 'none';
     document.getElementById('appScreen').style.display = 'block';
-    document.getElementById('groupNameDisplay').innerText = '📍 ' + code;
+    document.getElementById('groupNameDisplay').innerText = '📍 ' + code + (isAdmin ? ' · מנהל 👑' : ' · צופה 👁️');
     document.getElementById('mainBody').classList.remove('is-admin');
+    if (isAdmin) document.getElementById('mainBody').classList.add('is-admin');
 }
 
 window.leaveGroup = () => {
@@ -323,10 +342,12 @@ window.leaveGroup = () => {
     if (currentListener && dbRef) off(dbRef);
     currentGroupCode = null;
     sessionStorage.removeItem('pokerGroup');
+    sessionStorage.removeItem('pokerPass');
     document.getElementById('mainBody').classList.remove('is-admin');
     document.getElementById('appScreen').style.display = 'none';
     document.getElementById('lobbyScreen').style.display = 'flex';
     document.getElementById('joinCode').value = '';
+    document.getElementById('joinPass').value = '';
     showLobbyError('');
 };
 
@@ -336,12 +357,15 @@ function showLobbyError(msg) {
 
 // ── Enter on input ──
 document.getElementById('joinCode').addEventListener('keydown', e => { if(e.key==='Enter') window.joinGroup(); });
-document.getElementById('newGroupPass').addEventListener('keydown', e => { if(e.key==='Enter') window.createGroup(); });
+document.getElementById('joinPass').addEventListener('keydown', e => { if(e.key==='Enter') window.joinGroup(); });
+document.getElementById('newGroupViewPass').addEventListener('keydown', e => { if(e.key==='Enter') window.createGroup(); });
 
 // ── Auto-restore session ──
 const savedGroup = sessionStorage.getItem('pokerGroup');
-if (savedGroup) {
+const savedPass  = sessionStorage.getItem('pokerPass');
+if (savedGroup && savedPass) {
     document.getElementById('joinCode').value = savedGroup;
+    document.getElementById('joinPass').value = savedPass;
     window.joinGroup();
 }
 
@@ -418,6 +442,8 @@ window.promptAdmin = () => {
     const pwd = prompt("סיסמת מנהל:");
     if (pwd && pwd === groupAdminPass) {
         document.getElementById('mainBody').classList.add('is-admin');
+        document.getElementById('groupNameDisplay').innerText = '📍 ' + currentGroupCode + ' · מנהל 👑';
+        sessionStorage.setItem('pokerPass', pwd);
         render();
     } else if (pwd !== null) {
         alert("סיסמה שגויה");
