@@ -230,7 +230,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, set, get, update, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB2TjONw7Kb3WY65qQZjZ5w6fZjkhVl2_g",
@@ -743,7 +743,7 @@ window.closeModal = () => document.querySelectorAll('.modal').forEach(m => m.cla
 
 // ── Firebase Sync מופעל ב-enterApp ──
 
-async function save() { await set(dbRef, { adminPassword: groupAdminPass, viewPassword: groupViewPass, players: window.players, physicalCash: window.physicalCash }); }
+async function save() { await update(dbRef, { players: window.players, physicalCash: window.physicalCash }); }
 
 // ── Batch from scale ──
 function handleBatchFromUrl() {
