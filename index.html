@@ -247,7 +247,8 @@ const db = getDatabase(app);
 
 // ── מצב קבוצה ──
 let currentGroupCode = null;   // קוד הקבוצה הפעיל
-let groupAdminPass = null;     // הסיסמה של המנהל (נטען מ-Firebase)
+let groupAdminPass = null;     // סיסמת המנהל
+let groupViewPass  = null;     // סיסמת הצפייה
 let dbRef = null;              // ה-ref הפעיל
 let currentListener = null;   // ה-onValue listener הפעיל
 
@@ -312,6 +313,7 @@ window.createGroup = async () => {
 function enterApp(code, adminPass, viewPass, isAdmin) {
     currentGroupCode = code;
     groupAdminPass = adminPass;
+    groupViewPass  = viewPass;
 
     // שמירה ב-sessionStorage — שמירת סוג הכניסה
     sessionStorage.setItem('pokerGroup', code);
@@ -325,6 +327,7 @@ function enterApp(code, adminPass, viewPass, isAdmin) {
         window.players = data.players || [];
         window.physicalCash = data.physicalCash || 0;
         groupAdminPass = data.adminPassword || (currentGroupCode === 'YAKIR' ? '1946' : groupAdminPass);
+        groupViewPass  = data.viewPassword  || (currentGroupCode === 'YAKIR' ? '1946' : groupViewPass);
         render();
         if (!window._scaleHandled) handleBatchFromUrl();
     });
@@ -740,7 +743,7 @@ window.closeModal = () => document.querySelectorAll('.modal').forEach(m => m.cla
 
 // ── Firebase Sync מופעל ב-enterApp ──
 
-async function save() { await set(dbRef, { adminPassword: groupAdminPass, players: window.players, physicalCash: window.physicalCash }); }
+async function save() { await set(dbRef, { adminPassword: groupAdminPass, viewPassword: groupViewPass, players: window.players, physicalCash: window.physicalCash }); }
 
 // ── Batch from scale ──
 function handleBatchFromUrl() {
