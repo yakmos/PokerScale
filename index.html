@@ -278,8 +278,8 @@ window.joinGroup = async () => {
         const snap = await get(ref(db, getDbPath(code)));
         if (!snap.exists()) { showLobbyError('קבוצה לא נמצאה. בדוק את הקוד.'); return; }
         const data = snap.val();
-        const adminPass = data.adminPassword || (code === 'YAKIR' ? '1946' : null);
-        const viewPass  = data.viewPassword  || (code === 'YAKIR' ? '1946' : null);
+        const adminPass = String(data.adminPassword ?? (code === 'YAKIR' ? '1946' : ''));
+        const viewPass  = String(data.viewPassword  ?? (code === 'YAKIR' ? '1946' : ''));
         if (pass === adminPass) {
             enterApp(code, adminPass, viewPass, true);   // מנהל
         } else if (viewPass && pass === viewPass) {
@@ -371,8 +371,8 @@ if (savedGroup && savedPass) {
     get(ref(db, getDbPath(savedGroup))).then(snap => {
         if (!snap.exists()) { sessionStorage.removeItem('pokerGroup'); sessionStorage.removeItem('pokerPass'); return; }
         const data = snap.val();
-        const adminPass = data.adminPassword || (savedGroup === 'YAKIR' ? '1946' : null);
-        const viewPass  = data.viewPassword  || (savedGroup === 'YAKIR' ? '1946' : null);
+        const adminPass = String(data.adminPassword ?? (savedGroup === 'YAKIR' ? '1946' : ''));
+        const viewPass  = String(data.viewPassword  ?? (savedGroup === 'YAKIR' ? '1946' : ''));
         if (savedPass === adminPass) {
             document.getElementById('joinCode').value = savedGroup;
             document.getElementById('joinPass').value = savedPass;
