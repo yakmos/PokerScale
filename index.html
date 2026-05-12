@@ -21,7 +21,7 @@
         .container { max-width: 500px; margin: 0 auto; }
         header { text-align: center; padding: 20px 0; border-bottom: 1px solid rgba(212,175,55,0.2); margin-bottom: 20px; }
         h1 { font-family: 'Rubik', sans-serif; font-weight: 900; font-size: 2.2rem; background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; letter-spacing: 2px; }
-        .admin-toolbar { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .admin-toolbar { display: flex; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
         .btn-outline-gold { background: transparent; border: 1px solid var(--casino-gold); color: var(--casino-gold); padding: 6px 18px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; }
         .dashboard { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 25px; }
         .stat-box { background: var(--card-bg); border-radius: 15px; padding: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); }
@@ -168,6 +168,7 @@
         <div class="admin-toolbar">
             <button class="btn-outline-gold" onclick="window.promptAdmin()">כניסת מנהל 🔒</button>
             <button class="btn-outline-gold admin-only" onclick="window.logoutAdmin()">התנתק 🔓</button>
+            <button class="btn-outline-gold admin-only" onclick="window.setPasswords()">סיסמאות 🔑</button>
             <button class="btn-outline-gold" style="font-size:0.75rem;padding:4px 12px;color:#666;border-color:#333;" onclick="window.leaveGroup()">← החלף קבוצה</button>
         </div>
     </header>
@@ -485,7 +486,25 @@ window.promptAdmin = () => {
         alert("סיסמה שגויה");
     }
 };
+
 window.logoutAdmin = () => { document.getElementById('mainBody').classList.remove('is-admin'); render(); };
+
+// ── הגדרת סיסמאות — כותב ישירות ל-Firebase ──
+window.setPasswords = async () => {
+    const newAdmin = prompt("סיסמת מנהל חדשה:", groupAdminPass);
+    if (newAdmin === null) return;
+    if (newAdmin.length < 3) { alert("סיסמת מנהל חייבת להכיל לפחות 3 תווים"); return; }
+    const newView = prompt("סיסמת צפייה חדשה:", groupViewPass);
+    if (newView === null) return;
+    if (newView.length < 3) { alert("סיסמת צפייה חייבת להכיל לפחות 3 תווים"); return; }
+    if (newAdmin === newView) { alert("סיסמאות חייבות להיות שונות!"); return; }
+    await update(dbRef, { adminPassword: newAdmin, viewPassword: newView });
+    groupAdminPass = newAdmin;
+    groupViewPass  = newView;
+    sessionStorage.setItem('pokerPass', newAdmin);
+    alert("✅ סיסמאות עודכנו בהצלחה!");
+};
+
 window.switchTab = (btn, sectionId) => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -803,15 +822,9 @@ function calcPlayerStats(p) {
     const h = p.history || [];
     const sessions = h.length;
     if (sessions === 0) return null;
-
-    // 1. ROI
     const totalInvested = h.reduce((s, e) => s + (e.invested || 0), 0);
     const roi = totalInvested > 0 ? Math.round((p.lifetime / totalInvested) * 100) : 0;
-
-    // 2+3. ערבים + ממוצע
     const avgPerSession = Math.round(p.lifetime / sessions);
-
-    // 4. רצף W/L
     const sorted = [...h].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
     const wl = sorted.map(e => e.profit >= 0 ? 'w' : 'l');
     let streak = 1;
@@ -820,31 +833,23 @@ function calcPlayerStats(p) {
         if (wl[i] === streakType) streak++;
         else break;
     }
-
-    // 5. Best / Worst
     const best  = sorted.reduce((b, e) => e.profit > b.profit ? e : b, sorted[0]);
     const worst = sorted.reduce((b, e) => e.profit < b.profit ? e : b, sorted[0]);
-
-    // מגמה
     let trend = 'neutral';
     if (wl.length >= 1) trend = wl[wl.length - 1] === 'w' ? 'up' : 'down';
-
     return { sessions, roi, avgPerSession, streak, streakType, wl, best, worst, trend, totalInvested };
 }
 
-// ── Toggle leaderboard card ──
 window.toggleLbCard = (id) => {
     const card = document.getElementById('lbcard_' + id);
     if (card) card.classList.toggle('expanded');
 };
 
-// ── Render ──
 function render() {
     const isAdmin = document.getElementById('mainBody').classList.contains('is-admin');
     const active = window.players.filter(p => p.active);
     const waiting = window.players.filter(p => !p.active);
 
-    // Active list
     document.getElementById('activeList').innerHTML = active.map(p => `
         <div class="player-card">
             <div class="card-header">
@@ -861,7 +866,6 @@ function render() {
             ${isAdmin ? `<div class="action-group"><button class="btn-gold" onclick="window.openRebuy(${p.id},'${p.name}')">+ Rebuy</button><button class="btn-dark" onclick="window.openCashout(${p.id},'${p.name}')">Cashout</button></div>` : ''}
         </div>`).join('');
 
-    // Waiting list
     document.getElementById('waitingList').innerHTML = waiting.map(p => `
         <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:12px;margin-bottom:8px;">
             <div style="display:flex;align-items:center;gap:10px;">
@@ -874,7 +878,6 @@ function render() {
             </div>
         </div>`).join('');
 
-    // ── Leaderboard ── expandable cards
     const sorted = [...window.players].sort((a, b) => b.lifetime - a.lifetime);
     const rankClass = ['gold', 'silver', 'bronze'];
     const rankEmoji = ['🥇', '🥈', '🥉'];
@@ -883,60 +886,41 @@ function render() {
         const stats = calcPlayerStats(p);
         const profCls = p.lifetime >= 0 ? 'positive' : 'negative';
         const profStr = (p.lifetime >= 0 ? '+' : '') + '₪' + p.lifetime;
-
         const rankDisp = i < 3
             ? `<span class="lb-rank ${rankClass[i]}">${rankEmoji[i]}</span>`
             : `<span class="lb-rank">#${i + 1}</span>`;
-
         let trendBadge = '';
         if (stats) {
             if (stats.trend === 'up')        trendBadge = '<span class="trend-badge trend-up">↑</span>';
             else if (stats.trend === 'down') trendBadge = '<span class="trend-badge trend-down">↓</span>';
             else                             trendBadge = '<span class="trend-badge trend-neutral">—</span>';
         }
-
         const sessionsMini = stats
             ? `<div class="lb-sessions-mini">${stats.sessions} ערבים · ממוצע ${stats.avgPerSession >= 0 ? '+' : ''}₪${stats.avgPerSession}</div>`
             : `<div class="lb-sessions-mini">אין היסטוריה</div>`;
 
         let expandHtml = '';
         if (stats) {
-            // streak dots — עד 8 אחרונים
             const recentWL = stats.wl.slice(-8);
             const streakDots = recentWL.map((v, idx) => {
                 const isCurrent = idx >= recentWL.length - stats.streak;
                 return `<div class="streak-dot ${v}" style="${isCurrent ? 'opacity:1' : 'opacity:0.35'}">${v === 'w' ? 'W' : 'L'}</div>`;
             }).join('');
-
             const streakLabel = stats.streakType === 'w'
                 ? `<span style="color:var(--poker-green)">רצף ניצחונות ${stats.streak}×</span>`
                 : `<span style="color:var(--poker-red)">רצף הפסדים ${stats.streak}×</span>`;
-
             const adminBtns = isAdmin ? `<div class="lb-admin-row">
                 <button class="lb-admin-btn" onclick="event.stopPropagation();window.openPlayerChart(${p.id})">📈 גרף</button>
                 <button class="lb-admin-btn" onclick="event.stopPropagation();window.openHistoryEditor(${p.id})">📝 עריכה</button>
                 <button class="lb-admin-btn" onclick="event.stopPropagation();window.editLifetime(${p.id})">✏️ עדכן</button>
             </div>` : '';
-
             expandHtml = `<div class="lb-expand">
                 <div class="lb-divider"></div>
                 <div class="stats-grid">
-                    <div class="stat-tile">
-                        <span class="stat-label">ROI</span>
-                        <div class="stat-val ${stats.roi >= 0 ? 'positive' : 'negative'}">${stats.roi >= 0 ? '+' : ''}${stats.roi}%</div>
-                    </div>
-                    <div class="stat-tile">
-                        <span class="stat-label">ערבים</span>
-                        <div class="stat-val accent">${stats.sessions}</div>
-                    </div>
-                    <div class="stat-tile">
-                        <span class="stat-label">ממוצע/ערב</span>
-                        <div class="stat-val ${stats.avgPerSession >= 0 ? 'positive' : 'negative'}">${stats.avgPerSession >= 0 ? '+' : ''}₪${stats.avgPerSession}</div>
-                    </div>
-                    <div class="stat-tile wide">
-                        <span class="stat-label">סה"כ הושקע</span>
-                        <span class="stat-val" style="color:#aaa;">₪${stats.totalInvested}</span>
-                    </div>
+                    <div class="stat-tile"><span class="stat-label">ROI</span><div class="stat-val ${stats.roi >= 0 ? 'positive' : 'negative'}">${stats.roi >= 0 ? '+' : ''}${stats.roi}%</div></div>
+                    <div class="stat-tile"><span class="stat-label">ערבים</span><div class="stat-val accent">${stats.sessions}</div></div>
+                    <div class="stat-tile"><span class="stat-label">ממוצע/ערב</span><div class="stat-val ${stats.avgPerSession >= 0 ? 'positive' : 'negative'}">${stats.avgPerSession >= 0 ? '+' : ''}₪${stats.avgPerSession}</div></div>
+                    <div class="stat-tile wide"><span class="stat-label">סה"כ הושקע</span><span class="stat-val" style="color:#aaa;">₪${stats.totalInvested}</span></div>
                 </div>
                 <div class="streak-row">
                     <span class="streak-label">רצף:</span>
@@ -944,27 +928,16 @@ function render() {
                     <span style="font-size:0.72rem;margin-right:auto;padding-right:8px;">${streakLabel}</span>
                 </div>
                 <div class="records-row">
-                    <div class="record-tile">
-                        <span class="rec-label">🏆 הערב הטוב</span>
-                        <div class="rec-val positive">+₪${stats.best.profit}</div>
-                        <div class="rec-date">${stats.best.date || ''}</div>
-                    </div>
-                    <div class="record-tile">
-                        <span class="rec-label">💀 הערב הגרוע</span>
-                        <div class="rec-val negative">₪${stats.worst.profit}</div>
-                        <div class="rec-date">${stats.worst.date || ''}</div>
-                    </div>
+                    <div class="record-tile"><span class="rec-label">🏆 הערב הטוב</span><div class="rec-val positive">+₪${stats.best.profit}</div><div class="rec-date">${stats.best.date || ''}</div></div>
+                    <div class="record-tile"><span class="rec-label">💀 הערב הגרוע</span><div class="rec-val negative">₪${stats.worst.profit}</div><div class="rec-date">${stats.worst.date || ''}</div></div>
                 </div>
                 ${adminBtns}
             </div>`;
         }
-
         return `<div class="lb-card" id="lbcard_${p.id}" onclick="window.toggleLbCard(${p.id})">
             <div class="lb-main">
                 ${rankDisp}
-                <div class="lb-avatar-wrap">
-                    <div class="lb-avatar-inner">${getLbAvatarHtml(p.cards || '??')}</div>
-                </div>
+                <div class="lb-avatar-wrap"><div class="lb-avatar-inner">${getLbAvatarHtml(p.cards || '??')}</div></div>
                 <div class="lb-name-wrap">
                     <div class="lb-name">${p.name} ${trendBadge}</div>
                     ${sessionsMini}
@@ -976,10 +949,7 @@ function render() {
         </div>`;
     }).join('');
 
-    // Sessions
     renderSessions(isAdmin);
-
-    // Stats
     document.getElementById('totalPot').innerText = `₪${active.reduce((s,p)=>s+p.currentInv,0)}`;
     document.getElementById('activeCount').innerText = active.length;
     document.getElementById('rebuyCount').innerText = active.reduce((s,p)=>s+(p.rebuys||0),0);
@@ -1009,14 +979,9 @@ function renderSessions(isAdmin) {
             return `<div class="session-player-row">
                 <div>
                     <div class="session-player-name">${sp.name}</div>
-                    <div class="session-player-detail">
-                        השקיע: ₪${sp.invested} | פדה: ₪${sp.cashedOut}<br>
-                        ${rebuyHtml || 'ללא ריביי'}
-                    </div>
+                    <div class="session-player-detail">השקיע: ₪${sp.invested} | פדה: ₪${sp.cashedOut}<br>${rebuyHtml || 'ללא ריביי'}</div>
                 </div>
-                <div class="session-profit ${profitCls}">
-                    ${sp.profit >= 0 ? '+' : ''}₪${sp.profit}
-                </div>
+                <div class="session-profit ${profitCls}">${sp.profit >= 0 ? '+' : ''}₪${sp.profit}</div>
             </div>`;
         }).join('');
         const deleteBtn = isAdmin ? `<button class="delete-session-btn" onclick="window.deleteSession(${idx},[${sess.players.map(p=>`'${p.name}'`).join(',')}])">🗑️ מחק ערב זה</button>` : '';
