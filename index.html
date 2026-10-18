@@ -69,6 +69,15 @@
 .hint{max-width:440px;margin:6px auto 12px;line-height:1.55}
 @media(max-width:430px){.table-stage{max-width:100%}.table-live{top:50%;padding:9px 14px;min-width:112px}.table-live strong{font-size:23px}.seat{width:68px;min-height:80px}.seat .circle{width:48px;height:48px}.seat .nameplate{max-width:80px;min-width:58px;padding:4px 6px}.seat .seat-name{font-size:10px}.seat .seat-inv{font-size:12px}}
 
+
+/* Performance charts: cumulative + win/loss by poker evening */
+.chart-section{background:rgba(9,17,17,.62);border:1px solid rgba(212,175,55,.18);border-radius:14px;padding:13px 10px;margin-bottom:13px}
+.chart-section h3{color:var(--gold);font-size:16px;font-weight:900;margin:0 4px 4px}
+.chart-explainer{font-size:11px;line-height:1.5;color:#a8b7b0;margin:4px 4px 10px!important}
+.chart-canvas-area{height:250px;position:relative;width:100%}
+.chart-scroll{overflow-x:auto;overflow-y:hidden;max-width:100%;border-radius:10px;scrollbar-color:#75612e #101a1a}
+.evening-chart-canvas{height:255px;position:relative;min-width:300px}
+.chart-section canvas{display:block;width:100%!important;height:100%!important}
 </style>
 </head>
 <body>
@@ -127,7 +136,7 @@ function firstEmpty(players){const map=seatMap(players);for(let i=0;i<10;i++)if(
 function idOf(p){return String(p.id)}
 function getPlayer(id,people=state.players){return people.find(p=>idOf(p)===String(id))}
 function cardsHtml(value){const s=String(value||'');const parts=[...s.matchAll(/(10|[2-9TJQKA])([hdsc])/gi)].slice(0,2).map(m=>({rank:m[1].toUpperCase(),suit:({h:'♥',d:'♦',s:'♠',c:'♣'})[m[2].toLowerCase()],red:/[hd]/i.test(m[2])}));while(parts.length<2)parts.push({rank:'?',suit:'♠',red:false});return '<span class="pair">'+parts.map(c=>`<span class="playing-card ${c.red?'red':''}"><span>${esc(c.rank)}</span><span>${c.suit}</span></span>`).join('')+'</span>'}
-const state={code:null,admin:false,players:[],physicalCash:0,adminPassword:'',viewPassword:'',pendingSeat:null,currentPlayerId:null,movingId:null,modalKind:null,chart:null,sessionOffset:0,listener:null,dbRef:null,ready:false,processing:false,batchApplied:false};
+const state={code:null,admin:false,players:[],physicalCash:0,adminPassword:'',viewPassword:'',pendingSeat:null,currentPlayerId:null,movingId:null,modalKind:null,chart:null,eveningChart:null,sessionOffset:0,listener:null,dbRef:null,ready:false,processing:false,batchApplied:false};
 let api,db;
 function msg(text='',error=false){$('lobbyStatus').textContent=text;$('lobbyStatus').style.color=error?'#ff8993':'#c8c49a'}
 function setSync(text,error=false){$('syncStatus').textContent=text;$('syncStatus').style.color=error?'#ff8993':'#91aea0'}
@@ -135,7 +144,7 @@ function requireAdmin(){if(!state.admin)throw Error('יש להתחבר כמנה�
 function updateAdminUI(){document.querySelectorAll('.admin-only').forEach(el=>el.classList.toggle('hidden',!state.admin));$('adminBtn').classList.toggle('hidden',state.admin);$('groupTitle').textContent=`📍 ${state.code} · ${state.admin?'מנהל 👑':'צופה 👁'}`}
 function switchTab(name){for(const b of document.querySelectorAll('[data-tab]'))b.classList.toggle('active',b.dataset.tab===name);for(const pane of document.querySelectorAll('.pane'))pane.classList.toggle('active',pane.id==='pane-'+name)}
 function showModal(title,body,kind){state.modalKind=kind;$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modal').classList.remove('hidden')}
-function closeModal(){state.modalKind=null;$('modal').classList.add('hidden');if(state.chart){state.chart.destroy();state.chart=null}}
+function closeModal(){state.modalKind=null;$('modal').classList.add('hidden');for(const key of ['chart','eveningChart']){if(state[key]){state[key].destroy();state[key]=null}}}
 async function enterGroup(code,pass,admin){if(state.listener)state.listener();state.code=code;state.admin=admin;sessionStorage.setItem('pokerGroup',code);sessionStorage.setItem('pokerPass',pass);state.dbRef=api.ref(db,groupPath(code));$('lobby').classList.add('hidden');$('app').classList.remove('hidden');updateAdminUI();setSync('מסנכרן מול Firebase…');state.listener=api.onValue(state.dbRef,snap=>{const data=snap.val()||{};state.players=normalizePlayers(data.players);state.physicalCash=num(data.physicalCash);state.adminPassword=fallbackPass(data,code,'adminPassword');state.viewPassword=fallbackPass(data,code,'viewPassword');render();setSync('מחובר ומסונכרן');if(!state.batchApplied)handleBatchFromUrl()},error=>{console.error(error);setSync('שגיאת סנכרון: '+error.message,true)})}
 async function joinGroup(code,pass){if(!validCode(code))throw Error('קוד הקבוצה חייב להכיל 2–32 תווים באנגלית או מספרים');if(!pass)throw Error('נא להזין סיסמה');const snap=await api.get(api.ref(db,groupPath(code)));if(!snap.exists())throw Error('הקבוצה אינה קיימת');const data=snap.val(),ap=fallbackPass(data,code,'adminPassword'),vp=fallbackPass(data,code,'viewPassword');if(pass===ap)await enterGroup(code,pass,true);else if(vp&&pass===vp)await enterGroup(code,pass,false);else throw Error('סיסמה שגויה')}
 async function createGroup(code,adminPass,viewPass){if(!validCode(code)||code==='YAKIR')throw Error('קוד חייב להיות 2–32 תווים באנגלית/מספרים, ולא YAKIR');if(adminPass.length<3||viewPass.length<3)throw Error('כל סיסמה צריכה להכיל לפחות 3 תווים');if(adminPass===viewPass)throw Error('סיסמת מנהל וצפייה חייבות להיות שונות');const group=api.ref(db,groupPath(code));const tx=await api.runTransaction(group,cur=>cur===null?{adminPassword:adminPass,viewPassword:viewPass,physicalCash:0,players:[]}:undefined,{applyLocally:false});if(!tx.committed)throw Error('שם הקבוצה כבר תפוס');await enterGroup(code,adminPass,true)}
@@ -192,7 +201,91 @@ function openCashout(p){state.currentPlayerId=idOf(p);showModal('פדיון ז׳
 function openCards(p){showModal('שנה קלפים – '+p.name,`<label class="label">לדוגמה AhKs</label><input id="cardsInput" class="field" value="${esc(p.cards||'??')}" maxlength="20"><button class="btn full" data-action="save-cards" data-id="${esc(idOf(p))}">שמור קלפים</button>`,'cards')}
 function openPasswordModal(){showModal('שינוי סיסמאות',`<label class="label">סיסמת מנהל חדשה</label><input class="field" id="adminPasswordInput" type="password" autocomplete="new-password"><label class="label">סיסמת צפייה חדשה</label><input class="field" id="viewPasswordInput" type="password" autocomplete="new-password"><button class="btn full" data-action="save-passwords">שמור סיסמאות</button>`,'passwords')}
 function openHistory(p){state.currentPlayerId=idOf(p);const h=p.history||[];showModal('עריכת היסטוריה – '+p.name,`<p class="sub">עריכת רווחים ותוצאות. מחיקה מעדכנת את יתרת השחקן.</p>${h.map((e,i)=>`<div class="card" style="padding:10px"><label class="checkbox-entry"><input type="checkbox" class="history-check" value="${i}"><b style="color:var(--gold)">${fmtDate(e.timestamp)} ${fmtTime(e.timestamp)}</b></label><div class="statgrid" style="margin-top:10px"><div><label class="label">רווח</label><input class="field" type="number" value="${num(e.profit)}" id="hist-profit-${i}"></div><div><label class="label">השקיע</label><input class="field" type="number" value="${num(e.invested)}" id="hist-invested-${i}"></div><div><label class="label">פדה</label><input class="field" type="number" value="${num(e.cashedOut)}" id="hist-cashed-${i}"></div></div><button class="btn small outline full" data-action="save-history" data-index="${i}">שמור רשומה</button></div>`).join('')||'<div class="empty">אין היסטוריה</div>'}${h.length?'<button class="btn danger full" data-action="delete-history-selected">🗑 מחק רשומות מסומנות</button>':''}`,'history')}
-function openChart(p){if(!p.history?.length){alert('אין היסטוריה לשחקן');return}showModal('גרף ביצועים – '+p.name,'<div id="chartMount"><canvas id="playerChart"></canvas></div>','chart');if(typeof Chart==='undefined'){$('chartMount').textContent='לא ניתן לטעון את ספריית הגרפים. בדוק חיבור לאינטרנט.';return}const ordered=[...p.history].filter(Boolean).sort((a,b)=>num(a.timestamp)-num(b.timestamp));let sum=0;const points=ordered.map(e=>(sum+=num(e.profit)));state.chart=new Chart($('playerChart'),{type:'line',data:{labels:ordered.map(e=>fmtDate(e.timestamp)),datasets:[{label:'מאזן מצטבר',data:points,borderColor:'#d4af37',backgroundColor:'rgba(212,175,55,.1)',pointBackgroundColor:points.map(v=>v>=0?'#4ade80':'#fb6570'),fill:true,tension:.2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#eeeeee'}}},scales:{x:{ticks:{color:'#9aa9a1'},grid:{display:false}},y:{ticks:{color:'#9aa9a1'},grid:{color:'#FFFFFF15'}}}}})}
+function openChart(p){
+  if(!p || !p.history?.length){alert('אין היסטוריה לשחקן');return}
+  // Keep the existing cumulative line chart, and add a separate per-evening bar chart.
+  for(const key of ['chart','eveningChart']){if(state[key]){state[key].destroy();state[key]=null}}
+  showModal('גרף ביצועים – '+p.name,`
+    <div id="chartsArea">
+      <div class="chart-section">
+        <h3>📈 מאזן מצטבר</h3>
+        <p class="chart-explainer">הרווח או ההפסד המצטבר לאורך הזמן</p>
+        <div class="chart-canvas-area"><canvas id="playerChart" aria-label="גרף מאזן מצטבר" role="img"></canvas></div>
+      </div>
+      <div class="chart-section">
+        <h3>📊 רווח והפסד בכל ערב</h3>
+        <p class="chart-explainer">ירוק = רווח · אדום = הפסד · הסכום מוצג על כל עמודה</p>
+        <div class="chart-scroll" dir="ltr"><div id="eveningChartCanvasWrap" class="evening-chart-canvas"><canvas id="eveningChart" aria-label="גרף רווח והפסד לפי ערבי משחק" role="img"></canvas></div></div>
+        <p class="chart-explainer">אפשר לגלול לצדדים להצגת ערבים נוספים וללחוץ על עמודה לפרטים.</p>
+      </div>
+    </div>
+  `,'chart');
+  if(typeof Chart==='undefined'){$('chartsArea').textContent='לא ניתן לטעון את ספריית הגרפים. בדוק חיבור לאינטרנט.';return}
+  const ordered=[...p.history].filter(Boolean).sort((a,b)=>num(a.timestamp)-num(b.timestamp));
+  let sum=0;
+  const points=ordered.map(e=>(sum+=num(e.profit)));
+  const commonScales={
+    x:{ticks:{color:'#b2beb7',maxRotation:45,minRotation:0},grid:{display:false}},
+    y:{ticks:{color:'#b2beb7',callback:v=>money(v)},grid:{color:'#FFFFFF15'}}
+  };
+  state.chart=new Chart($('playerChart'),{
+    type:'line',
+    data:{labels:ordered.map(e=>fmtDate(e.timestamp)),datasets:[{
+      label:'מאזן מצטבר',data:points,borderColor:'#d4af37',backgroundColor:'rgba(212,175,55,.1)',
+      pointBackgroundColor:points.map(v=>v>=0?'#4ade80':'#fb6570'),pointRadius:4,pointHoverRadius:6,fill:true,tension:.2
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
+      plugins:{legend:{labels:{color:'#eeeeee'}},tooltip:{callbacks:{label:context=>'מאזן מצטבר: '+signed(context.parsed.y)}}},
+      scales:commonScales}
+  });
+
+  // Use the same 12-hour session grouping as the app's "ערבים" section, so two cashouts
+  // in the same evening become one bar rather than two separate wins/losses.
+  const evenings=buildSessions(state.players).reverse().map(session=>{
+    const playerSession=session.players.find(x=>x.id===idOf(p));
+    return playerSession?{timestamp:session.startTs,profit:num(playerSession.profit),invested:num(playerSession.invested),cashedOut:num(playerSession.cashedOut)}:null;
+  }).filter(Boolean);
+  if(!evenings.length){$('eveningChartCanvasWrap').textContent='אין ערבים בהיסטוריה';return}
+  $('eveningChartCanvasWrap').style.width=Math.max(300,evenings.length*68)+'px';
+  const nightColors=evenings.map(s=>s.profit>0?'#4ade80':s.profit<0?'#fb6570':'#98a6a5');
+  const eveningValueLabels={
+    id:'eveningValueLabels',
+    afterDatasetsDraw(chart){
+      const bars=chart.getDatasetMeta(0).data;
+      const ctx=chart.ctx;
+      ctx.save();
+      ctx.font='700 11px Rubik, Arial, sans-serif';
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      for(let i=0;i<bars.length;i++){
+        const value=evenings[i].profit;
+        const y=bars[i].y+(value<0?15:-13);
+        ctx.fillStyle=nightColors[i];
+        ctx.fillText(signed(value),bars[i].x,y);
+      }
+      ctx.restore();
+    }
+  };
+  state.eveningChart=new Chart($('eveningChart'),{
+    type:'bar',
+    data:{labels:evenings.map(s=>fmtDate(s.timestamp)),datasets:[{
+      label:'רווח / הפסד לערב',data:evenings.map(s=>s.profit),
+      backgroundColor:nightColors,borderColor:nightColors,borderWidth:1,
+      borderRadius:5,maxBarThickness:43,barPercentage:.74,categoryPercentage:.86
+    }]},
+    plugins:[eveningValueLabels],
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:18,bottom:18}},
+      plugins:{legend:{display:false},tooltip:{displayColors:false,callbacks:{
+        title:items=>'תאריך: '+items[0].label,
+        label:context=>'רווח / הפסד: '+signed(context.parsed.y),
+        afterLabel:context=>['השקעה: '+money(evenings[context.dataIndex].invested),'פדיון: '+money(evenings[context.dataIndex].cashedOut)]
+      }}},
+      scales:{
+        x:{ticks:{color:'#b2beb7',maxRotation:40,minRotation:0},grid:{display:false}},
+        y:{beginAtZero:true,grace:'22%',ticks:{color:'#b2beb7',callback:v=>money(v)},grid:{color:'#FFFFFF18'}}
+      }}
+  });
+}
 function updateCashPreview(){const amtField=$('cashoutAmount'),cashField=$('cashoutCash');if(!amtField||!cashField)return;const p=getPlayer(state.currentPlayerId);if(!p)return;const val=amtField.value===''?null:num(amtField.value),cash=num(cashField.value),res=$('cashoutResult');if(val===null){res.textContent='';$('cashRemaining').textContent='';return}const profit=val-p.currentInv;res.innerHTML=`${profit>0?'רווח נקי':profit<0?'הפסד':'יוצא מאוזן'}: <span class="${profit>=0?'pos':'neg'}">${signed(profit)}</span>`;$('cashRemaining').textContent=profit>0?'נותר לקבל לאחר מזומן: '+money(profit-cash):profit<0?'נותר להסדרה לאחר מזומן: '+money(Math.abs(profit)-cash):'ללא רווח/הפסד'}
 function handleBatchFromUrl(){const raw=new URLSearchParams(location.search).get('batch');if(!raw)return;state.batchApplied=true;const entries=raw.split(',').map(item=>{const ix=item.lastIndexOf(':');if(ix===-1)return null;return{name:item.slice(0,ix).trim(),amount:Number(item.slice(ix+1))}}).filter(e=>e&&e.name&&Number.isInteger(e.amount)&&e.amount>=0);if(!entries.length)return;if(!state.admin){alert('נדרשת כניסת מנהל כדי לייבא תוצאות שקילה. ניתן להיכנס כמנהל ולרענן את העמוד.');return}const lines=entries.map(e=>{const matches=state.players.filter(p=>p.active&&p.name.trim().toLowerCase()===e.name.toLowerCase());const found=matches.length===1?matches[0]:null;return{...e,id:found?idOf(found):null}});showModal('⚖️ תוצאות השקילה',lines.map(e=>`<div class="player-row"><b>${esc(e.name)}<small class="mini-text" style="display:block">${e.id?'✓ נמצא':'⚠ אין התאמה חד-משמעית'}</small></b><span style="color:var(--gold)">${money(e.amount)}</span></div>`).join('')+`<h3 style="text-align:center">סה״כ ${money(lines.reduce((s,e)=>s+e.amount,0))}</h3><button class="btn full" data-action="apply-batch">✓ אשר Cashout לכל השחקנים שנמצאו</button>`,'batch');state.batchEntries=lines}
 async function applyBatch(){const entries=state.batchEntries||[],used=new Set();if(!entries.some(e=>e.id))throw Error('לא נמצאו שחקנים פעילים');await transact(d=>{for(const e of entries){if(!e.id||used.has(e.id))continue;used.add(e.id);const p=getPlayer(e.id,d.players);if(!p||!p.active)continue;const invested=p.currentInv,profit=e.amount-invested;p.lifetime+=profit;p.sessionBalance+=profit;p.history.push({date:new Date().toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'}),profit,invested,cashedOut:e.amount,timestamp:Date.now(),eventId:uniqueId(),rebuys:p.rebuys,rebuyLog:[...p.rebuyLog]});Object.assign(p,{active:false,seatIndex:null,currentInv:0,rebuys:0,rebuyLog:[]})}});closeModal();history.replaceState({},'',location.pathname);switchTab('sessions')}
