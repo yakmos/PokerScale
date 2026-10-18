@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Poker Tracker Premium</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;900&family=Heebo:wght@400;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="[https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;900&family=Heebo:wght@400;700;900&display=swap](https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;900&family=Heebo:wght@400;700;900&display=swap)" rel="stylesheet">
+    <script src="[https://cdn.jsdelivr.net/npm/chart.js](https://cdn.jsdelivr.net/npm/chart.js)"></script>
     <style>
         :root {
             --casino-gold: #d4af37;
@@ -135,7 +135,6 @@
         .table-seat:active {
             transform: translate(-50%, -50%) scale(0.93);
         }
-        /* קואורדינטות של 10 כיסאות סביב השולחן */
         .table-seat[data-seat="0"] { top: 6%;  left: 50%; }
         .table-seat[data-seat="1"] { top: 16%; left: 86%; }
         .table-seat[data-seat="2"] { top: 38%; left: 93%; }
@@ -558,13 +557,13 @@
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, get, update, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { initializeApp } from "[https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js](https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js)";
+import { getDatabase, ref, set, get, update, onValue, off } from "[https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js](https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js)";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB2TjONw7Kb3WY65qQZjZ5w6fZjkhVl2_g",
     authDomain: "poker-tracker-23c60.firebaseapp.com",
-    databaseURL: "https://poker-tracker-23c60-default-rtdb.europe-west1.firebasedatabase.app",
+    databaseURL: "[https://poker-tracker-23c60-default-rtdb.europe-west1.firebasedatabase.app](https://poker-tracker-23c60-default-rtdb.europe-west1.firebasedatabase.app)",
     projectId: "poker-tracker-23c60",
     storageBucket: "poker-tracker-23c60.firebasestorage.app",
     messagingSenderId: "119167346985",
@@ -588,6 +587,17 @@ let movingPlayerId = null;
 let myChart = null;
 const TOTAL_SEATS = 10;
 const SESSION_GAP_MS = 12 * 60 * 60 * 1000;
+
+// פונקציית עזר בטוחה להמרת רשימת שחקנים מ-Firebase למערך תקין ללא null
+function normalizePlayers(raw) {
+    if (!raw) return [];
+    const arr = Array.isArray(raw) ? raw : Object.values(raw);
+    return arr.filter(p => p && typeof p === 'object').map(p => {
+        if (p.history && !Array.isArray(p.history)) p.history = Object.values(p.history);
+        if (p.rebuyLog && !Array.isArray(p.rebuyLog)) p.rebuyLog = Object.values(p.rebuyLog);
+        return p;
+    });
+}
 
 // ══════════════════════════════════════════
 // לוגיקת קבוצות
@@ -617,7 +627,10 @@ window.joinGroup = async () => {
         } else {
             showLobbyError('סיסמה שגויה');
         }
-    } catch(e) { showLobbyError('שגיאת חיבור. נסה שוב.'); }
+    } catch(e) {
+        console.error(e);
+        showLobbyError('שגיאת חיבור. נסה שוב.');
+    }
 };
 
 window.createGroup = async () => {
@@ -636,7 +649,10 @@ window.createGroup = async () => {
         if (snap.exists()) { showLobbyError('קוד זה תפוס, בחר קוד אחר'); return; }
         await set(ref(db, path), { adminPassword: pass, viewPassword: viewPass, players: [], physicalCash: 0 });
         enterApp(code, pass, viewPass, true);
-    } catch(e) { showLobbyError('שגיאת חיבור. נסה שוב.'); }
+    } catch(e) {
+        console.error(e);
+        showLobbyError('שגיאת חיבור. נסה שוב.');
+    }
 };
 
 function enterApp(code, adminPass, viewPass, isAdmin) {
@@ -647,27 +663,34 @@ function enterApp(code, adminPass, viewPass, isAdmin) {
     sessionStorage.setItem('pokerPass', isAdmin ? adminPass : viewPass);
     if (currentListener && dbRef) off(dbRef);
     dbRef = ref(db, getDbPath(code));
-    currentListener = onValue(dbRef, (snap) => {
-        const data = snap.val() || {};
-        window.players = data.players || [];
-        window.physicalCash = data.physicalCash || 0;
-        groupAdminPass = data.adminPassword || (currentGroupCode === 'YAKIR' ? '1946' : groupAdminPass);
-        groupViewPass  = data.viewPassword  || (currentGroupCode === 'YAKIR' ? '1946' : groupViewPass);
-        ensureActiveSeatsAssigned();
-        render();
-        if (!window._scaleHandled) handleBatchFromUrl();
-    });
+    
     document.getElementById('lobbyScreen').style.display = 'none';
     document.getElementById('appScreen').style.display = 'block';
     document.getElementById('groupNameDisplay').innerText = '📍 ' + code + (isAdmin ? ' · מנהל 👑' : ' · צופה 👁️');
     document.getElementById('mainBody').classList.remove('is-admin');
     if (isAdmin) document.getElementById('mainBody').classList.add('is-admin');
+
+    currentListener = onValue(dbRef, (snap) => {
+        try {
+            const data = snap.val() || {};
+            window.players = normalizePlayers(data.players);
+            window.physicalCash = Number(data.physicalCash) || 0;
+            groupAdminPass = String(data.adminPassword || (currentGroupCode === 'YAKIR' ? '1946' : groupAdminPass));
+            groupViewPass  = String(data.viewPassword  || (currentGroupCode === 'YAKIR' ? '1946' : groupViewPass));
+            ensureActiveSeatsAssigned();
+            render();
+            if (!window._scaleHandled) handleBatchFromUrl();
+        } catch (err) {
+            console.error("Render error:", err);
+        }
+    });
 }
 
-// מוודא שלכל שחקן פעיל יש כיסא משויך (תאימות לאחור)
 function ensureActiveSeatsAssigned() {
+    if (!Array.isArray(window.players)) window.players = [];
     const occupied = new Set();
     window.players.forEach(p => {
+        if (!p) return;
         if (p.active && typeof p.seatIndex === 'number' && p.seatIndex >= 0 && p.seatIndex < TOTAL_SEATS) {
             if (!occupied.has(p.seatIndex)) {
                 occupied.add(p.seatIndex);
@@ -677,6 +700,7 @@ function ensureActiveSeatsAssigned() {
         }
     });
     window.players.forEach(p => {
+        if (!p) return;
         if (p.active && (typeof p.seatIndex !== 'number' || p.seatIndex < 0 || p.seatIndex >= TOTAL_SEATS)) {
             for (let i = 0; i < TOTAL_SEATS; i++) {
                 if (!occupied.has(i)) {
@@ -735,7 +759,7 @@ if (savedGroup && savedPass) {
 // ── Card Parser ──
 const parseCard = (str) => {
     const suits = { 'h': '♥️', 'd': '♦️', 's': '♠️', 'c': '♣️' };
-    const match = str.match(/([2-9TJQKA]|10)([hdscl])?/i);
+    const match = String(str || '').match(/([2-9TJQKA]|10)([hdscl])?/i);
     if (!match) return { val: "?", suit: "", color: "#333" };
     const val = match[1].toUpperCase();
     const suitKey = (match[2] || 's').toLowerCase();
@@ -743,14 +767,14 @@ const parseCard = (str) => {
     return { val, suit: suits[suitKey] || '♠️', color: isRed ? '#e63946' : '#1a1a1a' };
 };
 const getAvatarHtml = (cardsStr) => {
-    const cards = (cardsStr || "??").match(/([2-9TJQKA]|10)([hdscl])?/gi) || ["?", "?"];
+    const cards = String(cardsStr || "??").match(/([2-9TJQKA]|10)([hdscl])?/gi) || ["?", "?"];
     const c1 = parseCard(cards[0] || "?");
     const c2 = parseCard(cards[1] || cards[0] || "?");
     return `<div class="avatar-cards"><div class="mini-card c1" style="color:${c1.color}"><span class="card-val">${c1.val}</span><span class="card-suit">${c1.suit}</span></div><div class="mini-card c2" style="color:${c2.color}"><span class="card-val">${c2.val}</span><span class="card-suit">${c2.suit}</span></div></div>`;
 };
 
 const getLbAvatarHtml = (cardsStr) => {
-    const cards = (cardsStr || "??").match(/([2-9TJQKA]|10)([hdscl])?/gi) || ["?", "?"];
+    const cards = String(cardsStr || "??").match(/([2-9TJQKA]|10)([hdscl])?/gi) || ["?", "?"];
     const c1 = parseCard(cards[0] || "?");
     const c2 = parseCard(cards[1] || cards[0] || "?");
     return `<div class="lb-avatar-cards">
@@ -766,9 +790,10 @@ const formatDate = (ts) => new Date(ts).toLocaleDateString('he-IL', {day:'2-digi
 // ── Session grouping ──
 function buildSessions(players) {
     const events = [];
-    for (const p of players) {
-        if (!p.history) continue;
+    for (const p of (players || [])) {
+        if (!p || !Array.isArray(p.history)) continue;
         for (const h of p.history) {
+            if (!h) continue;
             events.push({ ...h, playerName: p.name, playerId: p.id });
         }
     }
@@ -796,10 +821,10 @@ function buildSessions(players) {
             byPlayer[e.playerName].profit    += (e.profit || 0);
             byPlayer[e.playerName].cashouts.push({ profit: e.profit, invested: e.invested, cashedOut: e.cashedOut, timestamp: e.timestamp, rebuys: e.rebuys || 0, rebuyLog: e.rebuyLog || [] });
         }
-        const players = Object.values(byPlayer);
-        const totalPot = players.reduce((s, p) => s + p.invested, 0);
+        const sessPlayers = Object.values(byPlayer);
+        const totalPot = sessPlayers.reduce((s, p) => s + p.invested, 0);
         const lastTs = Math.max(...sess.events.map(e => e.timestamp || 0));
-        return { id: `sess_${idx}`, startTs: sess.startTs, lastTs, players, totalPot, eventCount: sess.events.length };
+        return { id: `sess_${idx}`, startTs: sess.startTs, lastTs, players: sessPlayers, totalPot, eventCount: sess.events.length };
     }).reverse();
 }
 
@@ -850,14 +875,12 @@ window.switchTab = (btn, sectionId) => {
 
 window.onSeatClick = async (seatIdx) => {
     const isAdmin = document.getElementById('mainBody').classList.contains('is-admin');
-    const occupant = window.players.find(p => p.active && p.seatIndex === seatIdx);
+    const occupant = window.players.find(p => p && p.active && p.seatIndex === seatIdx);
 
-    // אם אנחנו במצב העברת כיסא
     if (movingPlayerId !== null) {
-        const movingPlayer = window.players.find(p => p.id === movingPlayerId);
+        const movingPlayer = window.players.find(p => p && p.id === movingPlayerId);
         if (movingPlayer) {
             if (occupant && occupant.id !== movingPlayer.id) {
-                // החלפת מקומות בין שני שחקנים
                 occupant.seatIndex = movingPlayer.seatIndex;
             }
             movingPlayer.seatIndex = seatIdx;
@@ -888,7 +911,7 @@ function openSitModal(seatIdx) {
     document.getElementById('sitNewName').value = '';
     document.getElementById('sitNewCards').value = '';
 
-    const waiting = window.players.filter(p => !p.active);
+    const waiting = window.players.filter(p => p && !p.active);
     const container = document.getElementById('sitWaitingPlayers');
     if (waiting.length === 0) {
         container.innerHTML = `<div style="color:#666;font-size:0.8rem;text-align:center;padding:10px;">אין שחקנים קבועים פנויים</div>`;
@@ -909,11 +932,11 @@ function openSitModal(seatIdx) {
 
 window.sitExistingPlayer = async (playerId) => {
     const buyIn = parseInt(document.getElementById('sitBuyIn').value) || 50;
-    const p = window.players.find(x => x.id === playerId);
+    const p = window.players.find(x => x && x.id === playerId);
     if (!p) return;
 
     let seat = selectedSeatIndex;
-    if (seat === null || window.players.some(x => x.active && x.seatIndex === seat)) {
+    if (seat === null || window.players.some(x => x && x.active && x.seatIndex === seat)) {
         seat = findFirstEmptySeat();
     }
     if (seat === -1) {
@@ -939,7 +962,7 @@ window.createAndSitPlayer = async () => {
         return;
     }
     let seat = selectedSeatIndex;
-    if (seat === null || window.players.some(x => x.active && x.seatIndex === seat)) {
+    if (seat === null || window.players.some(x => x && x.active && x.seatIndex === seat)) {
         seat = findFirstEmptySeat();
     }
     if (seat === -1) {
@@ -966,7 +989,7 @@ window.createAndSitPlayer = async () => {
 
 function findFirstEmptySeat() {
     for (let i = 0; i < TOTAL_SEATS; i++) {
-        if (!window.players.some(p => p.active && p.seatIndex === i)) return i;
+        if (!window.players.some(p => p && p.active && p.seatIndex === i)) return i;
     }
     return -1;
 }
@@ -975,28 +998,29 @@ function openSeatActionModal(player) {
     currentId = player.id;
     document.getElementById('saAvatar').innerHTML = getAvatarHtml(player.cards || "??");
     document.getElementById('saName').innerText = player.name;
-    document.getElementById('saSeatInfo').innerText = `כיסא #${(player.seatIndex ?? 0) + 1} · מאזן כולל: ${player.lifetime >= 0 ? '+' : ''}₪${player.lifetime}`;
-    document.getElementById('saInvested').innerText = `₪${player.currentInv}`;
+    const lifetime = player.lifetime || 0;
+    document.getElementById('saSeatInfo').innerText = `כיסא #${(player.seatIndex ?? 0) + 1} · מאזן כולל: ${lifetime >= 0 ? '+' : ''}₪${lifetime}`;
+    document.getElementById('saInvested').innerText = `₪${player.currentInv || 0}`;
     document.getElementById('saRebuys').innerText = `×${player.rebuys || 0}`;
     document.getElementById('seatActionModal').classList.add('active');
 }
 
 window.triggerRebuyFromSeat = () => {
-    const p = window.players.find(x => x.id === currentId);
+    const p = window.players.find(x => x && x.id === currentId);
     if (!p) return;
     window.closeModal();
     window.openRebuy(p.id, p.name);
 };
 
 window.triggerCashoutFromSeat = () => {
-    const p = window.players.find(x => x.id === currentId);
+    const p = window.players.find(x => x && x.id === currentId);
     if (!p) return;
     window.closeModal();
     window.openCashout(p.id, p.name);
 };
 
 window.startMoveSeat = () => {
-    const p = window.players.find(x => x.id === currentId);
+    const p = window.players.find(x => x && x.id === currentId);
     if (!p) return;
     movingPlayerId = p.id;
     window.closeModal();
@@ -1009,7 +1033,7 @@ window.cancelMoveSeat = () => {
 };
 
 window.removePlayerFromTable = async () => {
-    const p = window.players.find(x => x.id === currentId);
+    const p = window.players.find(x => x && x.id === currentId);
     if (!p) return;
     if (!confirm(`להסיר את ${p.name} מהשולחן ללא שמירת היסטוריה (ביטול כניסה)?`)) return;
     p.active = false;
@@ -1024,7 +1048,7 @@ window.removePlayerFromTable = async () => {
 window.editCurrentPlayerCards = async () => {
     if (!currentId) return;
     await window.editPlayerCards(currentId);
-    const p = window.players.find(x => x.id === currentId);
+    const p = window.players.find(x => x && x.id === currentId);
     if (p && document.getElementById('seatActionModal').classList.contains('active')) {
         document.getElementById('saAvatar').innerHTML = getAvatarHtml(p.cards || "??");
     }
@@ -1046,11 +1070,11 @@ window.joinGame = async (id) => {
 };
 
 window.deletePlayer = async (id) => {
-    if (confirm("למחוק שחקן לצמיתות?")) { window.players = window.players.filter(p => p.id !== id); await save(); }
+    if (confirm("למחוק שחקן לצמיתות?")) { window.players = window.players.filter(p => p && p.id !== id); await save(); }
 };
 
 window.editPlayerCards = async (id) => {
-    const p = window.players.find(x => x.id === id);
+    const p = window.players.find(x => x && x.id === id);
     if (!p) return;
     const val = prompt("הזן קלפים (למשל AhKs):", p.cards);
     if (val !== null) { p.cards = val.trim() || "??"; await save(); }
@@ -1075,11 +1099,11 @@ window.confirmCustomRebuy = () => {
 };
 
 window.confirmRebuy = async (amt) => {
-    const p = window.players.find(x => x.id === currentId);
+    const p = window.players.find(x => x && x.id === currentId);
     if (p) {
-        p.currentInv += amt;
+        p.currentInv = (p.currentInv || 0) + amt;
         p.rebuys = (p.rebuys || 0) + 1;
-        if (!p.rebuyLog) p.rebuyLog = [];
+        if (!Array.isArray(p.rebuyLog)) p.rebuyLog = [];
         p.rebuyLog.push({ amount: amt, timestamp: Date.now() });
         await save();
         window.closeModal();
@@ -1089,9 +1113,9 @@ window.confirmRebuy = async (amt) => {
 // ── Cashout ──
 window.openCashout = (id, name) => {
     currentId = id;
-    const p = window.players.find(x => x.id === id);
+    const p = window.players.find(x => x && x.id === id);
     document.getElementById('coName').innerText = name;
-    document.getElementById('coInvestedInfo').innerText = p ? `נכנס לשולחן בסה"כ: ₪${p.currentInv}` : '';
+    document.getElementById('coInvestedInfo').innerText = p ? `נכנס לשולחן בסה"כ: ₪${p.currentInv || 0}` : '';
     document.getElementById('coAmount').value = '';
     document.getElementById('coCash').value = '';
     document.getElementById('coCashResult').innerText = '';
@@ -1102,11 +1126,11 @@ window.openCashout = (id, name) => {
 
 window.updateLiveCalculation = () => {
     const val = parseInt(document.getElementById('coAmount').value) || 0;
-    const p = window.players.find(x => x.id === currentId);
+    const p = window.players.find(x => x && x.id === currentId);
     const res = document.getElementById('coCalcResult');
     const cashArea = document.getElementById('cashInputArea');
     if (!p) return;
-    const diff = val - p.currentInv;
+    const diff = val - (p.currentInv || 0);
     document.getElementById('coCash').value = '';
     document.getElementById('coCashResult').innerText = '';
     if (diff > 0) { res.innerHTML = `רווח נקי: <span class="price-display positive">+₪${diff}</span> (סה"כ מקבל ₪${val})`; cashArea.style.display = 'block'; document.getElementById('cashLabel').innerText = 'כמה מזומן פיזי לקח מהקופה?'; }
@@ -1117,9 +1141,9 @@ window.updateLiveCalculation = () => {
 window.updateCashCalculation = () => {
     const amt = parseInt(document.getElementById('coAmount').value) || 0;
     const cash = parseInt(document.getElementById('coCash').value) || 0;
-    const p = window.players.find(x => x.id === currentId);
+    const p = window.players.find(x => x && x.id === currentId);
     if (!p) return;
-    const profit = amt - p.currentInv;
+    const profit = amt - (p.currentInv || 0);
     const res = document.getElementById('coCashResult');
     if (profit < 0) {
         const left = Math.abs(profit) - cash;
@@ -1138,19 +1162,20 @@ window.confirmCashout = async () => {
     }
     const amt = parseInt(amtInput) || 0;
     const cashHandled = parseInt(document.getElementById('coCash').value) || 0;
-    const p = window.players.find(x => x.id === currentId);
+    const p = window.players.find(x => x && x.id === currentId);
     if (!p) return;
-    const profit = amt - p.currentInv;
+    const inv = p.currentInv || 0;
+    const profit = amt - inv;
     p.lifetime = (p.lifetime || 0) + profit;
     let digitalProfit = profit;
     if (profit < 0) { digitalProfit += cashHandled; window.physicalCash += cashHandled; }
     else if (profit > 0) { digitalProfit -= cashHandled; window.physicalCash -= cashHandled; }
     p.sessionBalance = (p.sessionBalance || 0) + digitalProfit;
-    if (!p.history) p.history = [];
+    if (!Array.isArray(p.history)) p.history = [];
     p.history.push({
         date: new Date().toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit'}),
-        profit, invested: p.currentInv, cashedOut: amt,
-        timestamp: Date.now(), rebuys: p.rebuys, rebuyLog: p.rebuyLog || []
+        profit, invested: inv, cashedOut: amt,
+        timestamp: Date.now(), rebuys: p.rebuys || 0, rebuyLog: p.rebuyLog || []
     });
     p.active = false;
     p.seatIndex = null;
@@ -1169,9 +1194,9 @@ window.deleteSession = async (sessionIdx, playerNames) => {
     if (!sess) return;
     const tsSet = new Set(sess.players.flatMap(sp => sp.cashouts.map(c => c.timestamp)));
     for (const p of window.players) {
-        if (!p.history) continue;
+        if (!p || !Array.isArray(p.history)) continue;
         const before = p.history.length;
-        p.history = p.history.filter(h => !tsSet.has(h.timestamp));
+        p.history = p.history.filter(h => h && !tsSet.has(h.timestamp));
         if (p.history.length < before) {
             p.lifetime = p.history.reduce((s, h) => s + (h.profit || 0), 0);
         }
@@ -1183,13 +1208,14 @@ window.deleteSession = async (sessionIdx, playerNames) => {
 window.openHistoryEditor = (id) => {
     window.closeModal();
     currentId = id;
-    const p = window.players.find(x => x.id === id);
-    if (!p || !p.history || p.history.length === 0) return alert("אין היסטוריה לשחקן זה");
+    const p = window.players.find(x => x && x.id === id);
+    if (!p || !Array.isArray(p.history) || p.history.length === 0) return alert("אין היסטוריה לשחקן זה");
     document.getElementById('historyEditName').innerText = `עריכת היסטוריה: ${p.name}`;
     let html = `<div style="margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;">
         <button class="btn-dark" style="color:var(--poker-red);padding:8px 15px;font-size:0.9rem;" onclick="window.deleteSelectedHistoryEntries(${id})">🗑️ מחק מסומנים</button>
         <span style="font-size:0.8rem;color:#888;">סמן למחיקה</span></div>`;
     [...p.history].reverse().forEach((h, revIndex) => {
+        if (!h) return;
         const index = p.history.length - 1 - revIndex;
         html += `<div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:12px;border:1px solid #333;margin-bottom:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -1214,7 +1240,7 @@ window.openHistoryEditor = (id) => {
 };
 
 window.saveHistoryEntry = async (playerId, index) => {
-    const p = window.players.find(x => x.id === playerId);
+    const p = window.players.find(x => x && x.id === playerId);
     if (p && p.history && p.history[index]) {
         const oldProfit = p.history[index].profit;
         const newProfit = parseInt(document.getElementById(`edit_prof_${index}`).value) || 0;
@@ -1230,7 +1256,7 @@ window.saveHistoryEntry = async (playerId, index) => {
 
 window.deleteHistoryEntry = async (playerId, index) => {
     if (!confirm("למחוק רשומה זו?")) return;
-    const p = window.players.find(x => x.id === playerId);
+    const p = window.players.find(x => x && x.id === playerId);
     if (p && p.history && p.history[index]) {
         p.lifetime = (p.lifetime || 0) - p.history[index].profit;
         p.history.splice(index, 1);
@@ -1244,7 +1270,7 @@ window.deleteSelectedHistoryEntries = async (playerId) => {
     const checkboxes = document.querySelectorAll('.history-delete-cb:checked');
     if (checkboxes.length === 0) return alert("לא סומנו רשומות.");
     if (!confirm(`למחוק ${checkboxes.length} רשומות?`)) return;
-    const p = window.players.find(x => x.id === playerId);
+    const p = window.players.find(x => x && x.id === playerId);
     if (p && p.history) {
         const indices = Array.from(checkboxes).map(cb => parseInt(cb.getAttribute('data-index'))).sort((a,b) => b - a);
         indices.forEach(i => { if (p.history[i]) { p.lifetime = (p.lifetime||0) - p.history[i].profit; p.history.splice(i, 1); } });
@@ -1255,7 +1281,8 @@ window.deleteSelectedHistoryEntries = async (playerId) => {
 };
 
 window.editLifetime = async (id) => {
-    const p = window.players.find(x => x.id === id);
+    const p = window.players.find(x => x && x.id === id);
+    if (!p) return;
     const val = prompt(`ערוך מאזן ל-${p.name}:`, p.lifetime);
     if (val !== null) { p.lifetime = parseInt(val) || 0; await save(); }
 };
@@ -1263,13 +1290,14 @@ window.editLifetime = async (id) => {
 // ── Chart ──
 window.openPlayerChart = (id) => {
     window.closeModal();
-    const p = window.players.find(x => x.id === id);
-    if (!p || !p.history || p.history.length === 0) return alert("אין נתוני היסטוריה");
+    const p = window.players.find(x => x && x.id === id);
+    if (!p || !Array.isArray(p.history) || p.history.length === 0) return alert("אין נתוני היסטוריה");
     document.getElementById('chartPlayerName').innerText = `ביצועים: ${p.name}`;
     document.getElementById('chartModal').classList.add('active');
     const ctx = document.getElementById('playerChart').getContext('2d');
     if (myChart) myChart.destroy();
     const agg = p.history.reduce((acc, curr) => {
+        if (!curr) return acc;
         if (!acc[curr.date]) acc[curr.date] = { profit: 0, invested: 0, cashedOut: 0 };
         acc[curr.date].profit += curr.profit;
         acc[curr.date].invested += (curr.invested || 0);
@@ -1311,7 +1339,7 @@ function handleBatchFromUrl() {
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;';
     const rows = entries.map(e => {
-        const found = window.players.find(p => p.active && p.name.trim() === e.name.trim()) || window.players.find(p => p.active && p.name.toLowerCase().includes(e.name.toLowerCase()));
+        const found = window.players.find(p => p && p.active && p.name.trim() === e.name.trim()) || window.players.find(p => p && p.active && p.name.toLowerCase().includes(e.name.toLowerCase()));
         const status = found ? `<span style="color:#4ade80;font-size:0.85rem;">✓ נמצא — ${found.name}</span>` : `<span style="color:#f39c12;font-size:0.85rem;">⚠ לא נמצא פעיל</span>`;
         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.08);"><div><div style="font-weight:700;font-size:1rem;">${e.name}</div>${status}</div><div style="font-family:'Rubik',sans-serif;font-size:1.2rem;color:#d4af37;font-weight:900;">₪${e.amount}</div></div>`;
     }).join('');
@@ -1330,13 +1358,13 @@ function handleBatchFromUrl() {
         document.getElementById('scaleApplyBtn').disabled = true;
         document.getElementById('scaleApplyBtn').innerText = '...שומר';
         for (const e of entries) {
-            const match = window.players.find(p => p.active && p.name.trim() === e.name.trim()) || window.players.find(p => p.active && p.name.toLowerCase().includes(e.name.toLowerCase()));
+            const match = window.players.find(p => p && p.active && p.name.trim() === e.name.trim()) || window.players.find(p => p && p.active && p.name.toLowerCase().includes(e.name.toLowerCase()));
             if (match) {
-                const savedInv = match.currentInv;
+                const savedInv = match.currentInv || 0;
                 const profit = e.amount - savedInv;
                 match.lifetime = (match.lifetime||0) + profit;
                 match.sessionBalance = (match.sessionBalance||0) + profit;
-                if (!match.history) match.history = [];
+                if (!Array.isArray(match.history)) match.history = [];
                 match.history.push({ date: new Date().toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'}), profit, invested: savedInv, cashedOut: e.amount, timestamp: Date.now(), rebuys: match.rebuys || 0, rebuyLog: match.rebuyLog || [] });
                 match.active = false; match.seatIndex = null; match.currentInv = 0; match.rebuys = 0; match.rebuyLog = [];
             }
@@ -1352,12 +1380,13 @@ function handleBatchFromUrl() {
 // LEADERBOARD — חישוב סטטיסטיקות
 // ══════════════════════════════════════════
 function calcPlayerStats(p) {
-    const h = p.history || [];
+    const h = Array.isArray(p.history) ? p.history.filter(Boolean) : [];
     const sessions = h.length;
     if (sessions === 0) return null;
     const totalInvested = h.reduce((s, e) => s + (e.invested || 0), 0);
-    const roi = totalInvested > 0 ? Math.round((p.lifetime / totalInvested) * 100) : 0;
-    const avgPerSession = Math.round(p.lifetime / sessions);
+    const lifetime = p.lifetime || 0;
+    const roi = totalInvested > 0 ? Math.round((lifetime / totalInvested) * 100) : 0;
+    const avgPerSession = Math.round(lifetime / sessions);
     const sorted = [...h].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
     const wl = sorted.map(e => e.profit >= 0 ? 'w' : 'l');
     let streak = 1;
@@ -1380,14 +1409,14 @@ window.toggleLbCard = (id) => {
 
 function render() {
     const isAdmin = document.getElementById('mainBody').classList.contains('is-admin');
-    const active = window.players.filter(p => p.active);
-    const waiting = window.players.filter(p => !p.active);
-    const totalPot = active.reduce((s, p) => s + p.currentInv, 0);
+    const validPlayers = (window.players || []).filter(Boolean);
+    const active = validPlayers.filter(p => p.active);
+    const waiting = validPlayers.filter(p => !p.active);
+    const totalPot = active.reduce((s, p) => s + (p.currentInv || 0), 0);
 
-    // עדכון באנר העברת כיסא
     const moveBanner = document.getElementById('moveBanner');
     if (movingPlayerId !== null) {
-        const mp = window.players.find(p => p.id === movingPlayerId);
+        const mp = validPlayers.find(p => p.id === movingPlayerId);
         if (mp) {
             moveBanner.classList.add('active');
             document.getElementById('moveBannerText').innerText = `🔄 בחר כיסא יעד עבור ${mp.name}...`;
@@ -1399,7 +1428,6 @@ function render() {
         moveBanner.classList.remove('active');
     }
 
-    // רינדור 10 הכיסאות סביב שולחן הפוקר
     let seatsHtml = '';
     for (let i = 0; i < TOTAL_SEATS; i++) {
         const occupant = active.find(p => p.seatIndex === i);
@@ -1421,7 +1449,7 @@ function render() {
                     </div>
                     <div class="seat-badge">
                         <div class="seat-name">${occupant.name}</div>
-                        <div class="seat-inv">₪${occupant.currentInv}</div>
+                        <div class="seat-inv">₪${occupant.currentInv || 0}</div>
                     </div>
                 </div>`;
         } else {
@@ -1436,7 +1464,6 @@ function render() {
     document.getElementById('tableCenterPot').innerText = `₪${totalPot}`;
     document.getElementById('tableCenterPlayers').innerText = `${active.length}/${TOTAL_SEATS} שחקנים`;
 
-    // רשימת שחקנים קבועים (מחוץ לשולחן)
     document.getElementById('waitingList').innerHTML = waiting.map(p => `
         <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:12px;margin-bottom:8px;">
             <div style="display:flex;align-items:center;gap:10px;">
@@ -1449,14 +1476,15 @@ function render() {
             </div>
         </div>`).join('');
 
-    const sorted = [...window.players].sort((a, b) => b.lifetime - a.lifetime);
+    const sorted = [...validPlayers].sort((a, b) => (b.lifetime || 0) - (a.lifetime || 0));
     const rankClass = ['gold', 'silver', 'bronze'];
     const rankEmoji = ['🥇', '🥈', '🥉'];
 
     document.getElementById('leaderboardList').innerHTML = sorted.map((p, i) => {
         const stats = calcPlayerStats(p);
-        const profCls = p.lifetime >= 0 ? 'positive' : 'negative';
-        const profStr = (p.lifetime >= 0 ? '+' : '') + '₪' + p.lifetime;
+        const lifetime = p.lifetime || 0;
+        const profCls = lifetime >= 0 ? 'positive' : 'negative';
+        const profStr = (lifetime >= 0 ? '+' : '') + '₪' + lifetime;
         const rankDisp = i < 3
             ? `<span class="lb-rank ${rankClass[i]}">${rankEmoji[i]}</span>`
             : `<span class="lb-rank">#${i + 1}</span>`;
