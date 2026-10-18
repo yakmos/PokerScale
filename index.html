@@ -61,6 +61,213 @@
         .icon-btn:hover { color: var(--casino-gold); }
         #chartContainer { width: 100%; height: 300px; margin-top: 20px; background: rgba(255,255,255,0.02); border-radius: 15px; padding: 10px; }
 
+        /* ══ POKER TABLE BIRD'S-EYE VIEW ══ */
+        .poker-table-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 390px;
+            height: 520px;
+            margin: 20px auto 30px;
+            user-select: none;
+        }
+        .poker-table-felt {
+            position: absolute;
+            top: 45px;
+            bottom: 45px;
+            left: 50px;
+            right: 50px;
+            background: radial-gradient(ellipse at center, #1b5e3a 0%, #0f3822 70%, #092214 100%);
+            border-radius: 150px;
+            border: 14px solid #281a11;
+            box-shadow: 
+                inset 0 0 30px rgba(0,0,0,0.85),
+                0 0 0 3px var(--casino-gold),
+                0 15px 40px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+        .poker-table-felt::after {
+            content: '';
+            position: absolute;
+            top: 12px; bottom: 12px; left: 12px; right: 12px;
+            border: 1px dashed rgba(212,175,55,0.3);
+            border-radius: 130px;
+            pointer-events: none;
+        }
+        .table-center-info {
+            text-align: center;
+            z-index: 2;
+            padding: 12px 18px;
+            background: rgba(0,0,0,0.45);
+            border-radius: 20px;
+            border: 1px solid rgba(212,175,55,0.25);
+            backdrop-filter: blur(4px);
+        }
+        .table-center-info .pot-label {
+            font-size: 0.72rem;
+            color: #aaa;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+        .table-center-info .pot-amount {
+            font-family: 'Rubik', sans-serif;
+            font-size: 1.7rem;
+            font-weight: 900;
+            color: var(--casino-gold);
+            text-shadow: 0 2px 10px rgba(212,175,55,0.4);
+        }
+        .table-seat {
+            position: absolute;
+            width: 78px;
+            height: 86px;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .table-seat:active {
+            transform: translate(-50%, -50%) scale(0.93);
+        }
+        /* קואורדינטות של 10 כיסאות סביב השולחן */
+        .table-seat[data-seat="0"] { top: 6%;  left: 50%; }
+        .table-seat[data-seat="1"] { top: 16%; left: 86%; }
+        .table-seat[data-seat="2"] { top: 38%; left: 93%; }
+        .table-seat[data-seat="3"] { top: 62%; left: 93%; }
+        .table-seat[data-seat="4"] { top: 84%; left: 86%; }
+        .table-seat[data-seat="5"] { top: 94%; left: 50%; }
+        .table-seat[data-seat="6"] { top: 84%; left: 14%; }
+        .table-seat[data-seat="7"] { top: 62%; left: 7%; }
+        .table-seat[data-seat="8"] { top: 38%; left: 7%; }
+        .table-seat[data-seat="9"] { top: 16%; left: 14%; }
+
+        .seat-circle {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(15,18,21,0.88);
+            border: 2px dashed rgba(212,175,55,0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--casino-gold);
+            font-size: 1.3rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            position: relative;
+            transition: all 0.2s;
+        }
+        .table-seat.occupied .seat-circle {
+            border: 2px solid var(--casino-gold);
+            background: #000;
+            box-shadow: 0 0 15px rgba(212,175,55,0.35), 0 4px 12px rgba(0,0,0,0.8);
+        }
+        .table-seat.moving-source .seat-circle {
+            border-color: var(--poker-green);
+            box-shadow: 0 0 20px var(--poker-green);
+            animation: seatPulse 1s infinite;
+        }
+        .table-seat.moving-target .seat-circle {
+            border-color: var(--poker-green);
+            border-style: solid;
+        }
+        @keyframes seatPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .seat-badge {
+            background: #1c2229;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 2px 7px;
+            margin-top: -6px;
+            z-index: 12;
+            text-align: center;
+            min-width: 68px;
+            max-width: 88px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.7);
+        }
+        .seat-name {
+            font-size: 0.72rem;
+            font-weight: 900;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.1;
+        }
+        .seat-inv {
+            font-family: 'Rubik', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--casino-gold);
+            line-height: 1.1;
+            margin-top: 1px;
+        }
+        .seat-rebuy-pill {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--poker-red);
+            color: #fff;
+            font-family: 'Rubik', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 900;
+            padding: 1px 5px;
+            border-radius: 10px;
+            border: 1px solid #000;
+            z-index: 15;
+        }
+        .seat-num-tag {
+            font-size: 0.65rem;
+            color: #777;
+            margin-top: 3px;
+            font-weight: 700;
+        }
+        .move-banner {
+            background: rgba(74, 222, 128, 0.15);
+            border: 1px solid var(--poker-green);
+            color: var(--poker-green);
+            padding: 10px 14px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .move-banner.active {
+            display: flex;
+        }
+        .quick-buy-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .quick-buy-btn {
+            background: rgba(212,175,55,0.12);
+            border: 1px solid rgba(212,175,55,0.35);
+            color: var(--casino-gold);
+            padding: 10px;
+            border-radius: 10px;
+            font-family: 'Rubik', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .quick-buy-btn:active {
+            background: var(--casino-gold);
+            color: #000;
+        }
+
         /* ── SESSION HISTORY STYLES ── */
         .session-card { background: var(--card-bg); border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.06); overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
         .session-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: rgba(0,0,0,0.3); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -161,7 +368,7 @@
 </div>
 
 <!-- ══ מסך האפליקציה הראשי ══ -->
-<div id="appScreen" style="display:none;">
+<div id="appScreen" class="container" style="display:none;">
     <header>
         <h1>Poker Tracker</h1>
         <div id="groupNameDisplay" style="font-size:0.8rem;color:#888;margin-top:3px;letter-spacing:2px;"></div>
@@ -178,27 +385,42 @@
         <div class="stat-box admin-only" style="cursor:pointer;border-color:rgba(74,222,128,0.3);" onclick="window.editPhysicalCash()">
             <span>מזומן פיזי בקופה 💵</span><strong id="physicalCashDisplay" style="color:var(--poker-green);">₪0</strong>
         </div>
-        <div class="stat-box"><span>שחקנים פעילים</span><strong id="activeCount">0</strong></div>
+        <div class="stat-box"><span>שחקנים בשולחן</span><strong id="activeCount">0</strong></div>
         <div class="stat-box"><span>סה"כ ריביי</span><strong id="rebuyCount">0</strong></div>
     </div>
 
     <nav class="tabs-nav">
-        <button id="tabGame" class="tab-btn active" onclick="window.switchTab(this,'gameSection')">שולחן חי</button>
+        <button id="tabGame" class="tab-btn active" onclick="window.switchTab(this,'gameSection')">שולחן חי ♠️</button>
         <button id="tabLeader" class="tab-btn" onclick="window.switchTab(this,'historySection')">Leaderboard</button>
         <button id="tabSessions" class="tab-btn" onclick="window.switchTab(this,'sessionsSection')">ערבים 📅</button>
     </nav>
 
     <div id="gameSection" class="section active">
-        <div class="admin-only" style="background:var(--card-bg);padding:15px;border-radius:15px;margin-bottom:20px;border:1px solid rgba(212,175,55,0.2);">
-            <div style="display:flex;gap:8px;">
-                <input type="text" id="newPlayerName" class="form-input" placeholder="שם" style="margin-bottom:0">
-                <input type="text" id="newPlayerCards" class="form-input" placeholder="AhKs" style="width:100px;margin-bottom:0">
-                <button class="btn-gold" style="flex:none;width:60px;padding:0" onclick="window.addNewPlayer()">+</button>
-            </div>
+        <!-- באנר מצב העברת כיסא -->
+        <div id="moveBanner" class="move-banner">
+            <span id="moveBannerText">בחר כיסא יעד להעברה...</span>
+            <button class="btn-outline-gold" style="padding:3px 10px;font-size:0.75rem;" onclick="window.cancelMoveSeat()">ביטול ✕</button>
         </div>
-        <div id="activeList"></div>
-        <div id="waitingArea" class="admin-only" style="margin-top:30px;">
-            <h4 style="margin-bottom:10px;color:var(--casino-gold);font-size:0.9rem;">שחקנים קבועים:</h4>
+
+        <!-- שולחן פוקר במבט הציפור -->
+        <div class="poker-table-wrapper" id="pokerTableWrapper">
+            <div class="poker-table-felt">
+                <div class="table-center-info">
+                    <div class="pot-label">קופה בשולחן</div>
+                    <div class="pot-amount" id="tableCenterPot">₪0</div>
+                    <div style="font-size:0.68rem;color:#888;margin-top:3px;" id="tableCenterPlayers">0/10 שחקנים</div>
+                </div>
+            </div>
+            <div id="tableSeatsContainer"></div>
+        </div>
+
+        <p style="text-align:center;font-size:0.78rem;color:#777;margin-top:-10px;margin-bottom:20px;">
+            💡 לחץ על כיסא פנוי (<b>+</b>) להושבת שחקן או על שחקן פעיל לריביי, פדיון והזזה
+        </p>
+
+        <!-- רשימת שחקנים קבועים בהמתנה -->
+        <div id="waitingArea" class="admin-only" style="margin-top:20px;">
+            <h4 style="margin-bottom:10px;color:var(--casino-gold);font-size:0.9rem;">שחקנים קבועים (לא בשולחן):</h4>
             <div id="waitingList"></div>
         </div>
     </div>
@@ -212,30 +434,109 @@
     </div>
 </div>
 
-<!-- Modals -->
+<!-- ══ Modals ══ -->
+
+<!-- מודאל הושבת שחקן בכיסא -->
+<div id="sitModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color:var(--casino-gold);margin-bottom:15px;">הושבת שחקן בכיסא #<span id="sitSeatNum"></span></h3>
+        
+        <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:14px;margin-bottom:16px;border:1px solid rgba(212,175,55,0.2);">
+            <label style="font-size:0.8rem;color:#aaa;display:block;margin-bottom:8px;">סכום כניסה התחלתי (Buy-in ב-₪):</label>
+            <div class="quick-buy-grid">
+                <button type="button" class="quick-buy-btn" onclick="document.getElementById('sitBuyIn').value=50">₪50</button>
+                <button type="button" class="quick-buy-btn" onclick="document.getElementById('sitBuyIn').value=100">₪100</button>
+                <button type="button" class="quick-buy-btn" onclick="document.getElementById('sitBuyIn').value=150">₪150</button>
+            </div>
+            <input type="number" id="sitBuyIn" class="form-input" value="50" style="margin-bottom:0;" placeholder="סכום כניסה (₪)">
+        </div>
+
+        <div style="text-align:right;margin-bottom:16px;">
+            <h4 style="font-size:0.85rem;color:var(--casino-gold);margin-bottom:8px;">בחר שחקן קבוע:</h4>
+            <div id="sitWaitingPlayers" style="max-height:170px;overflow-y:auto;"></div>
+        </div>
+
+        <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;text-align:right;">
+            <h4 style="font-size:0.85rem;color:#aaa;margin-bottom:8px;">או הוסף שחקן חדש לשולחן:</h4>
+            <div style="display:flex;gap:8px;">
+                <input type="text" id="sitNewName" class="form-input" placeholder="שם השחקן" style="margin-bottom:0;flex:1;">
+                <input type="text" id="sitNewCards" class="form-input" placeholder="AhKs" style="width:90px;margin-bottom:0;">
+            </div>
+            <button class="btn-gold" style="width:100%;margin-top:10px;" onclick="window.createAndSitPlayer()">+ צור והושב בשולחן</button>
+        </div>
+
+        <button class="btn-dark" style="width:100%;margin-top:14px;" onclick="window.closeModal()">ביטול</button>
+    </div>
+</div>
+
+<!-- מודאל פעולות לשחקן יושב -->
+<div id="seatActionModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px;">
+            <div class="avatar" id="saAvatar" onclick="window.editCurrentPlayerCards()"></div>
+            <div style="text-align:right;">
+                <h3 id="saName" style="font-size:1.35rem;color:#fff;margin-bottom:2px;"></h3>
+                <div id="saSeatInfo" style="font-size:0.8rem;color:var(--casino-gold);"></div>
+            </div>
+        </div>
+
+        <div class="game-info" style="margin-bottom:18px;">
+            <div class="info-item">
+                <label>שילם הערב (Buy-in + Rebuys)</label>
+                <span class="value price-display" id="saInvested" style="color:var(--casino-gold);font-size:1.15rem;">₪0</span>
+            </div>
+            <div class="info-item">
+                <label>מספר ריביי הערב</label>
+                <span class="value" id="saRebuys" style="font-size:1.15rem;">0</span>
+            </div>
+        </div>
+
+        <div class="admin-only">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                <button class="btn-gold" style="padding:14px;" onclick="window.triggerRebuyFromSeat()">➕ Rebuy (ריביי)</button>
+                <button class="btn-gold" style="padding:14px;background:linear-gradient(135deg,#4ade80,#16a34a);color:#000;" onclick="window.triggerCashoutFromSeat()">💰 לפדות (Cashout)</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                <button class="btn-dark" onclick="window.startMoveSeat()">🔄 הזז כיסא</button>
+                <button class="btn-dark" onclick="window.editCurrentPlayerCards()">🃏 שנה קלפים</button>
+            </div>
+            <button class="btn-dark" style="width:100%;color:var(--poker-red);border-color:rgba(230,57,70,0.35);" onclick="window.removePlayerFromTable()">❌ הסר מהשולחן (ביטול כניסה)</button>
+        </div>
+
+        <button class="btn-dark" style="width:100%;margin-top:14px;" onclick="window.closeModal()">סגור</button>
+    </div>
+</div>
+
+<!-- מודאל Rebuy -->
 <div id="rebuyModal" class="modal">
     <div class="modal-content">
-        <h3>REBUY ל-<span id="rbName"></span></h3>
+        <h3>REBUY ל-<span id="rbName" style="color:var(--casino-gold);"></span></h3>
         <p style="color:#888;font-size:0.85rem;margin-bottom:15px;" id="rbTime"></p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-            <button class="btn-gold" onclick="window.confirmRebuy(50)">₪50</button>
-            <button class="btn-gold" onclick="window.confirmRebuy(100)">₪100</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <button class="btn-gold" onclick="window.confirmRebuy(50)">+ ₪50</button>
+            <button class="btn-gold" onclick="window.confirmRebuy(100)">+ ₪100</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <input type="number" id="customRebuyAmt" class="form-input" placeholder="סכום אחר (₪)" style="margin-bottom:0;flex:1;">
+            <button class="btn-outline-gold" style="border-radius:12px;padding:0 18px;font-weight:700;" onclick="window.confirmCustomRebuy()">הוסף</button>
         </div>
         <button class="btn-dark" style="width:100%;margin-top:20px;" onclick="window.closeModal()">ביטול</button>
     </div>
 </div>
 
+<!-- מודאל Cashout (פדיון ז'יטונים) -->
 <div id="cashoutModal" class="modal">
     <div class="modal-content">
-        <h3>CASHOUT ל-<span id="coName"></span></h3>
-        <input type="number" id="coAmount" class="form-input" placeholder="כמה ₪ קופה יש לו?" oninput="window.updateLiveCalculation()">
+        <h3>פדיון ז'יטונים (Cashout) - <span id="coName" style="color:var(--casino-gold);"></span></h3>
+        <p id="coInvestedInfo" style="color:#aaa;font-size:0.85rem;margin:6px 0 14px;"></p>
+        <input type="number" id="coAmount" class="form-input" placeholder="כמה ₪ ז'יטונים יש לו ביד?" oninput="window.updateLiveCalculation()">
         <div id="coCalcResult" style="margin-bottom:15px;font-weight:900;font-size:1.2rem;"></div>
         <div id="cashInputArea" style="display:none;background:rgba(255,255,255,0.05);padding:15px;border-radius:12px;margin-bottom:15px;">
             <label id="cashLabel" style="display:block;font-size:0.85rem;color:#aaa;margin-bottom:8px;"></label>
             <input type="number" id="coCash" class="form-input" placeholder="סכום מזומן (₪)" style="margin-bottom:0;" oninput="window.updateCashCalculation()">
             <div id="coCashResult" style="margin-top:10px;font-weight:700;font-size:1.05rem;"></div>
         </div>
-        <button class="btn-gold" style="width:100%;" onclick="window.confirmCashout()">אשר פדיון</button>
+        <button class="btn-gold" style="width:100%;" onclick="window.confirmCashout()">✓ אשר פדיון ופנה כיסא</button>
         <button class="btn-dark" style="width:100%;margin-top:10px;" onclick="window.closeModal()">ביטול</button>
     </div>
 </div>
@@ -282,7 +583,10 @@ let currentListener = null;
 window.players = [];
 window.physicalCash = 0;
 let currentId = null;
+let selectedSeatIndex = null;
+let movingPlayerId = null;
 let myChart = null;
+const TOTAL_SEATS = 10;
 const SESSION_GAP_MS = 12 * 60 * 60 * 1000;
 
 // ══════════════════════════════════════════
@@ -349,6 +653,7 @@ function enterApp(code, adminPass, viewPass, isAdmin) {
         window.physicalCash = data.physicalCash || 0;
         groupAdminPass = data.adminPassword || (currentGroupCode === 'YAKIR' ? '1946' : groupAdminPass);
         groupViewPass  = data.viewPassword  || (currentGroupCode === 'YAKIR' ? '1946' : groupViewPass);
+        ensureActiveSeatsAssigned();
         render();
         if (!window._scaleHandled) handleBatchFromUrl();
     });
@@ -357,6 +662,31 @@ function enterApp(code, adminPass, viewPass, isAdmin) {
     document.getElementById('groupNameDisplay').innerText = '📍 ' + code + (isAdmin ? ' · מנהל 👑' : ' · צופה 👁️');
     document.getElementById('mainBody').classList.remove('is-admin');
     if (isAdmin) document.getElementById('mainBody').classList.add('is-admin');
+}
+
+// מוודא שלכל שחקן פעיל יש כיסא משויך (תאימות לאחור)
+function ensureActiveSeatsAssigned() {
+    const occupied = new Set();
+    window.players.forEach(p => {
+        if (p.active && typeof p.seatIndex === 'number' && p.seatIndex >= 0 && p.seatIndex < TOTAL_SEATS) {
+            if (!occupied.has(p.seatIndex)) {
+                occupied.add(p.seatIndex);
+            } else {
+                p.seatIndex = null;
+            }
+        }
+    });
+    window.players.forEach(p => {
+        if (p.active && (typeof p.seatIndex !== 'number' || p.seatIndex < 0 || p.seatIndex >= TOTAL_SEATS)) {
+            for (let i = 0; i < TOTAL_SEATS; i++) {
+                if (!occupied.has(i)) {
+                    p.seatIndex = i;
+                    occupied.add(i);
+                    break;
+                }
+            }
+        }
+    });
 }
 
 window.leaveGroup = () => {
@@ -419,7 +749,6 @@ const getAvatarHtml = (cardsStr) => {
     return `<div class="avatar-cards"><div class="mini-card c1" style="color:${c1.color}"><span class="card-val">${c1.val}</span><span class="card-suit">${c1.suit}</span></div><div class="mini-card c2" style="color:${c2.color}"><span class="card-val">${c2.val}</span><span class="card-suit">${c2.suit}</span></div></div>`;
 };
 
-// ── Leaderboard avatar (קטן יותר) ──
 const getLbAvatarHtml = (cardsStr) => {
     const cards = (cardsStr || "??").match(/([2-9TJQKA]|10)([hdscl])?/gi) || ["?", "?"];
     const c1 = parseCard(cards[0] || "?");
@@ -487,9 +816,12 @@ window.promptAdmin = () => {
     }
 };
 
-window.logoutAdmin = () => { document.getElementById('mainBody').classList.remove('is-admin'); render(); };
+window.logoutAdmin = () => {
+    document.getElementById('mainBody').classList.remove('is-admin');
+    movingPlayerId = null;
+    render();
+};
 
-// ── הגדרת סיסמאות — כותב ישירות ל-Firebase ──
 window.setPasswords = async () => {
     const newAdmin = prompt("סיסמת מנהל חדשה:", groupAdminPass);
     if (newAdmin === null) return;
@@ -512,15 +844,190 @@ window.switchTab = (btn, sectionId) => {
     document.getElementById(sectionId).classList.add('active');
 };
 
-// ── Players ──
-window.addNewPlayer = async () => {
-    const name = document.getElementById('newPlayerName').value.trim();
-    const cards = document.getElementById('newPlayerCards').value.trim() || "??";
-    if (!name) return;
-    window.players.push({ id: Date.now(), name, cards, lifetime: 0, sessionBalance: 0, history: [], active: true, currentInv: 50, rebuys: 0, rebuyLog: [] });
-    document.getElementById('newPlayerName').value = '';
-    document.getElementById('newPlayerCards').value = '';
+// ══════════════════════════════════════════
+// לוגיקת שולחן פוקר וכיסאות
+// ══════════════════════════════════════════
+
+window.onSeatClick = async (seatIdx) => {
+    const isAdmin = document.getElementById('mainBody').classList.contains('is-admin');
+    const occupant = window.players.find(p => p.active && p.seatIndex === seatIdx);
+
+    // אם אנחנו במצב העברת כיסא
+    if (movingPlayerId !== null) {
+        const movingPlayer = window.players.find(p => p.id === movingPlayerId);
+        if (movingPlayer) {
+            if (occupant && occupant.id !== movingPlayer.id) {
+                // החלפת מקומות בין שני שחקנים
+                occupant.seatIndex = movingPlayer.seatIndex;
+            }
+            movingPlayer.seatIndex = seatIdx;
+            movingPlayerId = null;
+            await save();
+        } else {
+            movingPlayerId = null;
+            render();
+        }
+        return;
+    }
+
+    if (occupant) {
+        openSeatActionModal(occupant);
+    } else {
+        if (!isAdmin) {
+            alert("כניסת מנהל נדרשת להושבת שחקנים בשולחן 🔒");
+            return;
+        }
+        openSitModal(seatIdx);
+    }
+};
+
+function openSitModal(seatIdx) {
+    selectedSeatIndex = seatIdx;
+    document.getElementById('sitSeatNum').innerText = seatIdx + 1;
+    document.getElementById('sitBuyIn').value = 50;
+    document.getElementById('sitNewName').value = '';
+    document.getElementById('sitNewCards').value = '';
+
+    const waiting = window.players.filter(p => !p.active);
+    const container = document.getElementById('sitWaitingPlayers');
+    if (waiting.length === 0) {
+        container.innerHTML = `<div style="color:#666;font-size:0.8rem;text-align:center;padding:10px;">אין שחקנים קבועים פנויים</div>`;
+    } else {
+        container.innerHTML = waiting.map(p => `
+            <div onclick="window.sitExistingPlayer(${p.id})" style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.05);padding:9px 12px;border-radius:10px;margin-bottom:6px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="lb-avatar-inner" style="width:32px;height:32px;">${getLbAvatarHtml(p.cards || '??')}</div>
+                    <span style="font-weight:700;font-size:0.95rem;">${p.name}</span>
+                </div>
+                <span style="color:var(--casino-gold);font-size:0.82rem;font-weight:700;">הושב ←</span>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('sitModal').classList.add('active');
+}
+
+window.sitExistingPlayer = async (playerId) => {
+    const buyIn = parseInt(document.getElementById('sitBuyIn').value) || 50;
+    const p = window.players.find(x => x.id === playerId);
+    if (!p) return;
+
+    let seat = selectedSeatIndex;
+    if (seat === null || window.players.some(x => x.active && x.seatIndex === seat)) {
+        seat = findFirstEmptySeat();
+    }
+    if (seat === -1) {
+        alert("כל 10 הכיסאות בשולחן תפוסים!");
+        return;
+    }
+
+    p.active = true;
+    p.seatIndex = seat;
+    p.currentInv = buyIn;
+    p.rebuys = 0;
+    p.rebuyLog = [];
+    window.closeModal();
     await save();
+};
+
+window.createAndSitPlayer = async () => {
+    const name = document.getElementById('sitNewName').value.trim();
+    const cards = document.getElementById('sitNewCards').value.trim() || "??";
+    const buyIn = parseInt(document.getElementById('sitBuyIn').value) || 50;
+    if (!name) {
+        alert("נא להזין שם שחקן");
+        return;
+    }
+    let seat = selectedSeatIndex;
+    if (seat === null || window.players.some(x => x.active && x.seatIndex === seat)) {
+        seat = findFirstEmptySeat();
+    }
+    if (seat === -1) {
+        alert("כל 10 הכיסאות בשולחן תפוסים!");
+        return;
+    }
+
+    window.players.push({
+        id: Date.now(),
+        name,
+        cards,
+        lifetime: 0,
+        sessionBalance: 0,
+        history: [],
+        active: true,
+        seatIndex: seat,
+        currentInv: buyIn,
+        rebuys: 0,
+        rebuyLog: []
+    });
+    window.closeModal();
+    await save();
+};
+
+function findFirstEmptySeat() {
+    for (let i = 0; i < TOTAL_SEATS; i++) {
+        if (!window.players.some(p => p.active && p.seatIndex === i)) return i;
+    }
+    return -1;
+}
+
+function openSeatActionModal(player) {
+    currentId = player.id;
+    document.getElementById('saAvatar').innerHTML = getAvatarHtml(player.cards || "??");
+    document.getElementById('saName').innerText = player.name;
+    document.getElementById('saSeatInfo').innerText = `כיסא #${(player.seatIndex ?? 0) + 1} · מאזן כולל: ${player.lifetime >= 0 ? '+' : ''}₪${player.lifetime}`;
+    document.getElementById('saInvested').innerText = `₪${player.currentInv}`;
+    document.getElementById('saRebuys').innerText = `×${player.rebuys || 0}`;
+    document.getElementById('seatActionModal').classList.add('active');
+}
+
+window.triggerRebuyFromSeat = () => {
+    const p = window.players.find(x => x.id === currentId);
+    if (!p) return;
+    window.closeModal();
+    window.openRebuy(p.id, p.name);
+};
+
+window.triggerCashoutFromSeat = () => {
+    const p = window.players.find(x => x.id === currentId);
+    if (!p) return;
+    window.closeModal();
+    window.openCashout(p.id, p.name);
+};
+
+window.startMoveSeat = () => {
+    const p = window.players.find(x => x.id === currentId);
+    if (!p) return;
+    movingPlayerId = p.id;
+    window.closeModal();
+    render();
+};
+
+window.cancelMoveSeat = () => {
+    movingPlayerId = null;
+    render();
+};
+
+window.removePlayerFromTable = async () => {
+    const p = window.players.find(x => x.id === currentId);
+    if (!p) return;
+    if (!confirm(`להסיר את ${p.name} מהשולחן ללא שמירת היסטוריה (ביטול כניסה)?`)) return;
+    p.active = false;
+    p.seatIndex = null;
+    p.currentInv = 0;
+    p.rebuys = 0;
+    p.rebuyLog = [];
+    window.closeModal();
+    await save();
+};
+
+window.editCurrentPlayerCards = async () => {
+    if (!currentId) return;
+    await window.editPlayerCards(currentId);
+    const p = window.players.find(x => x.id === currentId);
+    if (p && document.getElementById('seatActionModal').classList.contains('active')) {
+        document.getElementById('saAvatar').innerHTML = getAvatarHtml(p.cards || "??");
+    }
 };
 
 window.editPhysicalCash = async () => {
@@ -529,12 +1036,17 @@ window.editPhysicalCash = async () => {
 };
 
 window.joinGame = async (id) => {
-    const p = window.players.find(x => x.id === id);
-    if (p) { p.active = true; p.currentInv = 50; p.rebuys = 0; p.rebuyLog = []; await save(); }
+    const emptySeat = findFirstEmptySeat();
+    if (emptySeat === -1) {
+        alert("כל הכיסאות בשולחן תפוסים!");
+        return;
+    }
+    selectedSeatIndex = emptySeat;
+    openSitModal(emptySeat);
 };
 
 window.deletePlayer = async (id) => {
-    if (confirm("למחוק שחקן?")) { window.players = window.players.filter(p => p.id !== id); await save(); }
+    if (confirm("למחוק שחקן לצמיתות?")) { window.players = window.players.filter(p => p.id !== id); await save(); }
 };
 
 window.editPlayerCards = async (id) => {
@@ -549,14 +1061,24 @@ window.openRebuy = (id, name) => {
     currentId = id;
     document.getElementById('rbName').innerText = name;
     document.getElementById('rbTime').innerText = 'זמן: ' + formatTime(Date.now());
+    document.getElementById('customRebuyAmt').value = '';
     document.getElementById('rebuyModal').classList.add('active');
+};
+
+window.confirmCustomRebuy = () => {
+    const amt = parseInt(document.getElementById('customRebuyAmt').value);
+    if (!amt || amt <= 0) {
+        alert("נא להזין סכום תקין");
+        return;
+    }
+    window.confirmRebuy(amt);
 };
 
 window.confirmRebuy = async (amt) => {
     const p = window.players.find(x => x.id === currentId);
     if (p) {
         p.currentInv += amt;
-        p.rebuys++;
+        p.rebuys = (p.rebuys || 0) + 1;
         if (!p.rebuyLog) p.rebuyLog = [];
         p.rebuyLog.push({ amount: amt, timestamp: Date.now() });
         await save();
@@ -567,7 +1089,9 @@ window.confirmRebuy = async (amt) => {
 // ── Cashout ──
 window.openCashout = (id, name) => {
     currentId = id;
+    const p = window.players.find(x => x.id === id);
     document.getElementById('coName').innerText = name;
+    document.getElementById('coInvestedInfo').innerText = p ? `נכנס לשולחן בסה"כ: ₪${p.currentInv}` : '';
     document.getElementById('coAmount').value = '';
     document.getElementById('coCash').value = '';
     document.getElementById('coCashResult').innerText = '';
@@ -585,9 +1109,9 @@ window.updateLiveCalculation = () => {
     const diff = val - p.currentInv;
     document.getElementById('coCash').value = '';
     document.getElementById('coCashResult').innerText = '';
-    if (diff > 0) { res.innerHTML = `צריך לקבל <span class="price-display positive">₪${diff}</span>`; cashArea.style.display = 'block'; document.getElementById('cashLabel').innerText = 'כמה מזומן פיזי לקח מהקופה?'; }
-    else if (diff < 0) { res.innerHTML = `חייב להשלים <span class="price-display negative">₪${Math.abs(diff)}</span>`; cashArea.style.display = 'block'; document.getElementById('cashLabel').innerText = 'כמה מזומן פיזי שם בקופה?'; }
-    else { res.innerHTML = "יוצא נקי לגמרי"; cashArea.style.display = 'none'; }
+    if (diff > 0) { res.innerHTML = `רווח נקי: <span class="price-display positive">+₪${diff}</span> (סה"כ מקבל ₪${val})`; cashArea.style.display = 'block'; document.getElementById('cashLabel').innerText = 'כמה מזומן פיזי לקח מהקופה?'; }
+    else if (diff < 0) { res.innerHTML = `הפסד: <span class="price-display negative">-₪${Math.abs(diff)}</span>`; cashArea.style.display = 'block'; document.getElementById('cashLabel').innerText = 'כמה מזומן פיזי שם בקופה?'; }
+    else { res.innerHTML = "יוצא מאוזן (₪0 רווח/הפסד)"; cashArea.style.display = 'none'; }
 };
 
 window.updateCashCalculation = () => {
@@ -607,7 +1131,12 @@ window.updateCashCalculation = () => {
 };
 
 window.confirmCashout = async () => {
-    const amt = parseInt(document.getElementById('coAmount').value) || 0;
+    const amtInput = document.getElementById('coAmount').value;
+    if (amtInput === '') {
+        alert("נא להזין כמה ז'יטונים יש לשחקן (אפשר גם 0)");
+        return;
+    }
+    const amt = parseInt(amtInput) || 0;
     const cashHandled = parseInt(document.getElementById('coCash').value) || 0;
     const p = window.players.find(x => x.id === currentId);
     if (!p) return;
@@ -623,7 +1152,11 @@ window.confirmCashout = async () => {
         profit, invested: p.currentInv, cashedOut: amt,
         timestamp: Date.now(), rebuys: p.rebuys, rebuyLog: p.rebuyLog || []
     });
-    p.active = false; p.currentInv = 0; p.rebuys = 0; p.rebuyLog = [];
+    p.active = false;
+    p.seatIndex = null;
+    p.currentInv = 0;
+    p.rebuys = 0;
+    p.rebuyLog = [];
     await save();
     window.closeModal();
 };
@@ -805,7 +1338,7 @@ function handleBatchFromUrl() {
                 match.sessionBalance = (match.sessionBalance||0) + profit;
                 if (!match.history) match.history = [];
                 match.history.push({ date: new Date().toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'}), profit, invested: savedInv, cashedOut: e.amount, timestamp: Date.now(), rebuys: match.rebuys || 0, rebuyLog: match.rebuyLog || [] });
-                match.active = false; match.currentInv = 0; match.rebuys = 0; match.rebuyLog = [];
+                match.active = false; match.seatIndex = null; match.currentInv = 0; match.rebuys = 0; match.rebuyLog = [];
             }
         }
         await save();
@@ -849,23 +1382,61 @@ function render() {
     const isAdmin = document.getElementById('mainBody').classList.contains('is-admin');
     const active = window.players.filter(p => p.active);
     const waiting = window.players.filter(p => !p.active);
+    const totalPot = active.reduce((s, p) => s + p.currentInv, 0);
 
-    document.getElementById('activeList').innerHTML = active.map(p => `
-        <div class="player-card">
-            <div class="card-header">
-                <div style="display:flex;align-items:center;gap:12px;">
-                    <div class="avatar" onclick="window.editPlayerCards(${p.id})">${getAvatarHtml(p.cards||"??")}</div>
-                    <div class="player-name">${p.name}</div>
-                </div>
-                <span class="price-display ${p.lifetime>=0?'positive':'negative'}">₪${p.lifetime}</span>
-            </div>
-            <div class="game-info">
-                <div class="info-item"><label>הושקע (נוכחי)</label><span class="value price-display">₪${p.currentInv}</span></div>
-                <div class="info-item"><label>ריביי ×${p.rebuys||0}</label><span class="value price-display ${((p.sessionBalance||0)-p.currentInv)>=0?'positive':'negative'}">₪${(p.sessionBalance||0)-p.currentInv}</span></div>
-            </div>
-            ${isAdmin ? `<div class="action-group"><button class="btn-gold" onclick="window.openRebuy(${p.id},'${p.name}')">+ Rebuy</button><button class="btn-dark" onclick="window.openCashout(${p.id},'${p.name}')">Cashout</button></div>` : ''}
-        </div>`).join('');
+    // עדכון באנר העברת כיסא
+    const moveBanner = document.getElementById('moveBanner');
+    if (movingPlayerId !== null) {
+        const mp = window.players.find(p => p.id === movingPlayerId);
+        if (mp) {
+            moveBanner.classList.add('active');
+            document.getElementById('moveBannerText').innerText = `🔄 בחר כיסא יעד עבור ${mp.name}...`;
+        } else {
+            movingPlayerId = null;
+            moveBanner.classList.remove('active');
+        }
+    } else {
+        moveBanner.classList.remove('active');
+    }
 
+    // רינדור 10 הכיסאות סביב שולחן הפוקר
+    let seatsHtml = '';
+    for (let i = 0; i < TOTAL_SEATS; i++) {
+        const occupant = active.find(p => p.seatIndex === i);
+        const isMovingSource = occupant && occupant.id === movingPlayerId;
+        const isMovingTarget = movingPlayerId !== null && (!occupant || occupant.id !== movingPlayerId);
+
+        let seatCls = 'table-seat';
+        if (occupant) seatCls += ' occupied';
+        if (isMovingSource) seatCls += ' moving-source';
+        if (isMovingTarget) seatCls += ' moving-target';
+
+        if (occupant) {
+            const rebuyBadge = (occupant.rebuys || 0) > 0 ? `<div class="seat-rebuy-pill">R×${occupant.rebuys}</div>` : '';
+            seatsHtml += `
+                <div class="${seatCls}" data-seat="${i}" onclick="window.onSeatClick(${i})">
+                    <div class="seat-circle">
+                        ${rebuyBadge}
+                        ${getLbAvatarHtml(occupant.cards || '??')}
+                    </div>
+                    <div class="seat-badge">
+                        <div class="seat-name">${occupant.name}</div>
+                        <div class="seat-inv">₪${occupant.currentInv}</div>
+                    </div>
+                </div>`;
+        } else {
+            seatsHtml += `
+                <div class="${seatCls}" data-seat="${i}" onclick="window.onSeatClick(${i})">
+                    <div class="seat-circle"><span>+</span></div>
+                    <span class="seat-num-tag">כיסא ${i + 1}</span>
+                </div>`;
+        }
+    }
+    document.getElementById('tableSeatsContainer').innerHTML = seatsHtml;
+    document.getElementById('tableCenterPot').innerText = `₪${totalPot}`;
+    document.getElementById('tableCenterPlayers').innerText = `${active.length}/${TOTAL_SEATS} שחקנים`;
+
+    // רשימת שחקנים קבועים (מחוץ לשולחן)
     document.getElementById('waitingList').innerHTML = waiting.map(p => `
         <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:12px;margin-bottom:8px;">
             <div style="display:flex;align-items:center;gap:10px;">
@@ -873,7 +1444,7 @@ function render() {
                 <span style="font-size:0.9rem;">${p.name}</span>
             </div>
             <div style="display:flex;gap:5px;">
-                <button class="btn-outline-gold" style="padding:2px 10px" onclick="window.joinGame(${p.id})">הכנס</button>
+                <button class="btn-outline-gold" style="padding:2px 10px" onclick="window.joinGame(${p.id})">הושב בשולחן</button>
                 <button class="icon-btn" onclick="window.deletePlayer(${p.id})">🗑️</button>
             </div>
         </div>`).join('');
@@ -950,7 +1521,7 @@ function render() {
     }).join('');
 
     renderSessions(isAdmin);
-    document.getElementById('totalPot').innerText = `₪${active.reduce((s,p)=>s+p.currentInv,0)}`;
+    document.getElementById('totalPot').innerText = `₪${totalPot}`;
     document.getElementById('activeCount').innerText = active.length;
     document.getElementById('rebuyCount').innerText = active.reduce((s,p)=>s+(p.rebuys||0),0);
     document.getElementById('physicalCashDisplay').innerText = `₪${window.physicalCash}`;
@@ -1006,4 +1577,4 @@ function renderSessions(isAdmin) {
 }
 </script>
 </body>
-</html>
+    </html>
