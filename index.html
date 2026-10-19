@@ -78,17 +78,11 @@
 .chart-scroll{overflow-x:auto;overflow-y:hidden;max-width:100%;border-radius:10px;scrollbar-color:#75612e #101a1a;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 .evening-chart-canvas{height:255px;position:relative;min-width:300px}
 .chart-section canvas{display:block;width:100%!important;height:100%!important}
-/* Cumulative chart can be collapsed without hiding the evening results. */
-details.cumulative-chart-section{padding:0;overflow:hidden}
-.chart-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:53px;padding:12px 13px;cursor:pointer;list-style:none;user-select:none}
-.chart-summary::-webkit-details-marker{display:none}
-.chart-summary:focus-visible{outline:2px solid var(--gold);outline-offset:-3px;border-radius:12px}
-.chart-summary-title{font-size:16px;font-weight:900;color:var(--gold)}
-.chart-summary-toggle{font-size:12px;color:#d3c39c;white-space:nowrap;font-weight:700}
-.chart-summary-toggle .expand-label{display:none}
-details.cumulative-chart-section:not([open]) .chart-summary-toggle .collapse-label{display:none}
-details.cumulative-chart-section:not([open]) .chart-summary-toggle .expand-label{display:inline}
-.chart-collapsible-content{padding:0 10px 13px}
+/* Horizontal time-axis zoom on the cumulative graph; the chart itself stays visible. */
+.chart-zoom-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:9px 4px 12px;direction:rtl}
+.chart-zoom-btn{background:#26332f;border:1px solid #8b7645;color:#efdbab;border-radius:9px;padding:7px 9px;font-size:12px;font-weight:800;min-height:36px}
+.chart-zoom-btn:disabled{opacity:.38}
+.chart-zoom-status{color:#9fb1a8;font-size:11px;flex-basis:100%;line-height:1.4}
 
 
 .overflow-notice{background:#3b2620;border:1px solid #d6a458;border-radius:12px;color:#f3e1bd;padding:12px;margin:12px 0;line-height:1.5;font-size:12px}
@@ -222,16 +216,17 @@ function openChart(p){
   for(const key of ['chart','eveningChart']){if(state[key]){state[key].destroy();state[key]=null}}
   showModal('גרף ביצועים – '+p.name,`
     <div id="chartsArea">
-      <details class="chart-section cumulative-chart-section" id="cumulativeChartPanel" open>
-        <summary class="chart-summary">
-          <span class="chart-summary-title">📈 מאזן מצטבר</span>
-          <span class="chart-summary-toggle"><span class="collapse-label">כיווץ ▲</span><span class="expand-label">פתיחה ▼</span></span>
-        </summary>
-        <div class="chart-collapsible-content">
-          <p class="chart-explainer">הרווח או ההפסד המצטבר לאורך הזמן</p>
-          <div class="chart-scroll" id="cumulativeChartScroll" dir="ltr"><div class="chart-canvas-area" id="cumulativeChartCanvasWrap"><canvas id="playerChart" aria-label="גרף מאזן מצטבר" role="img"></canvas></div></div>
+      <div class="chart-section cumulative-chart-section" id="cumulativeChartPanel">
+        <h3>📈 מאזן מצטבר</h3>
+        <p class="chart-explainer">אפשר לכווץ את ציר הזמן כדי לראות יותר תאריכים בבת אחת, או להרחיב כדי לראות כל תאריך בנפרד.</p>
+        <div class="chart-zoom-controls" role="group" aria-label="שינוי קנה מידה של ציר הזמן">
+          <button type="button" class="chart-zoom-btn" id="cumulativeZoomOut">− כווץ זמן</button>
+          <button type="button" class="chart-zoom-btn" id="cumulativeZoomIn">+ הרחב זמן</button>
+          <button type="button" class="chart-zoom-btn" id="cumulativeZoomAll">הצג הכול</button>
+          <span class="chart-zoom-status" id="cumulativeZoomStatus" aria-live="polite"></span>
         </div>
-      </details>
+        <div class="chart-scroll" id="cumulativeChartScroll" dir="ltr"><div class="chart-canvas-area" id="cumulativeChartCanvasWrap"><canvas id="playerChart" aria-label="גרף מאזן מצטבר" role="img"></canvas></div></div>
+      </div>
       <div class="chart-section">
         <h3>📊 רווח והפסד בכל ערב</h3>
         <p class="chart-explainer">ירוק = רווח · אדום = הפסד · הסכום מוצג על כל עמודה</p>
@@ -248,8 +243,16 @@ function openChart(p){
     x:{ticks:{color:'#b2beb7',maxRotation:45,minRotation:0},grid:{display:false}},
     y:{ticks:{color:'#b2beb7',callback:v=>money(v)},grid:{color:'#FFFFFF15'}}
   };
-  // Draw the full history, but start the visible window at the latest dates.
-  $('cumulativeChartCanvasWrap').style.width=Math.max($('cumulativeChartScroll').clientWidth,ordered.length*58,300)+'px';
+  // Draw the full history, but start at the most recent dates. Each zoom step
+  // controls horizontal space per record, never deleting or filtering data.
+  const cumulativeZoomSteps=[12,18,25,34,45,58,76,100,132];
+  let cumulativeZoomIndex=5; // default, 58 px per cashout
+  const cumulativeScroller=$('cumulativeChartScroll');
+  const cumulativeCanvasWrap=$('cumulativeChartCanvasWrap');
+  const cumulativeWidth=()=>cumulativeZoomIndex===-1
+    ?Math.max(cumulativeScroller.clientWidth,1)
+    :Math.max(cumulativeScroller.clientWidth,ordered.length*cumulativeZoomSteps[cumulativeZoomIndex],1);
+  cumulativeCanvasWrap.style.width=cumulativeWidth()+'px';
   state.chart=new Chart($('playerChart'),{
     type:'line',
     data:{labels:ordered.map(e=>fmtDate(e.timestamp)),datasets:[{
@@ -307,17 +310,37 @@ function openChart(p){
         y:{beginAtZero:true,grace:'22%',ticks:{color:'#b2beb7',callback:v=>money(v)},grid:{color:'#FFFFFF18'}}
       }}
   });
-  // Recalculate the canvas when a collapsed cumulative graph is opened again.
-  $('cumulativeChartPanel').addEventListener('toggle',event=>{
-    if(!event.currentTarget.open)return;
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      const scroller=$('cumulativeChartScroll');
-      const canvasWrap=$('cumulativeChartCanvasWrap');
-      if(!scroller||!canvasWrap)return;
-      canvasWrap.style.width=Math.max(scroller.clientWidth,ordered.length*58,300)+'px';
-      state.chart?.resize();
-    }));
-  });
+  // Zoom out compresses the time axis. Zoom in spreads dates apart.
+  // Preserve the latest date when the user is at the right edge, and otherwise
+  // keep the same historical position visible when changing zoom.
+  const refreshCumulativeZoomStatus=()=>{
+    const visibleCount=Math.min(ordered.length,Math.max(1,Math.floor(cumulativeScroller.clientWidth/
+      (cumulativeZoomIndex===-1 ? cumulativeScroller.clientWidth/Math.max(ordered.length,1) : cumulativeZoomSteps[cumulativeZoomIndex]))));
+    $('cumulativeZoomStatus').textContent=cumulativeZoomIndex===-1
+      ?`כל ${ordered.length} התאריכים מוצגים יחד`
+      :`בערך ${visibleCount} מתוך ${ordered.length} תאריכים במסך · אפשר לגלול אחורה`;
+    $('cumulativeZoomOut').disabled=cumulativeZoomIndex===-1||cumulativeZoomIndex===0;
+    $('cumulativeZoomIn').disabled=cumulativeZoomIndex===cumulativeZoomSteps.length-1;
+  };
+  const setCumulativeZoom=(nextIndex)=>{
+    const oldWidth=cumulativeCanvasWrap.getBoundingClientRect().width||cumulativeScroller.scrollWidth||1;
+    const oldMax=Math.max(0,cumulativeScroller.scrollWidth-cumulativeScroller.clientWidth);
+    const wasAtLatest=cumulativeScroller.scrollLeft>=oldMax-12;
+    const rightEdgeRatio=Math.min(1,(cumulativeScroller.scrollLeft+cumulativeScroller.clientWidth)/oldWidth);
+    cumulativeZoomIndex=Math.max(-1,Math.min(cumulativeZoomSteps.length-1,nextIndex));
+    cumulativeCanvasWrap.style.width=cumulativeWidth()+'px';
+    state.chart?.resize();
+    refreshCumulativeZoomStatus();
+    requestAnimationFrame(()=>{
+      const max=Math.max(0,cumulativeScroller.scrollWidth-cumulativeScroller.clientWidth);
+      cumulativeScroller.scrollLeft=wasAtLatest?max:Math.max(0,Math.min(max,
+        cumulativeScroller.scrollWidth*rightEdgeRatio-cumulativeScroller.clientWidth));
+    });
+  };
+  $('cumulativeZoomOut').addEventListener('click',()=>setCumulativeZoom(cumulativeZoomIndex===-1?-1:cumulativeZoomIndex-1));
+  $('cumulativeZoomIn').addEventListener('click',()=>setCumulativeZoom(cumulativeZoomIndex===-1?0:cumulativeZoomIndex+1));
+  $('cumulativeZoomAll').addEventListener('click',()=>setCumulativeZoom(-1));
+  refreshCumulativeZoomStatus();
   // Both charts read chronologically from left to right. Open at the latest
   // results (far right), and keep native touch/trackpad scrolling to the past.
   const scrollToLatest=()=>{
